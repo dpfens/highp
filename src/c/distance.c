@@ -1,5 +1,8 @@
 #include <math.h>
+
+#ifndef M_PI
 #define M_PI (4.0 * atan(1.0))
+#endif
 
 long double euclidean_distance(long double * point1, long double * point2, unsigned long long int dimension_count) {
   long double distance = 0.0;

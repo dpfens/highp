@@ -15,3 +15,11 @@ test:
 
 python:
 	python setup.py build_ext --inplace
+
+build:
+	mkdir -p $(BIN)
+	swig -outdir $(BIN) -python $(SRC)dbscan.i 
+
+	$(CC) -fPIC -c $(SRC)dbscan.c $(SRC)dbscan_wrap.c $(PYTHON27INCLUDES)
+
+	ld -shared dbscan_wrap.o dbscan.o -o $(BIN)_cluster.so

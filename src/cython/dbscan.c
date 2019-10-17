@@ -596,9 +596,9 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include <string.h>
 #include <stdlib.h>
 #include "time.h"
-#include "../c/dbscan.h"
+#include "../c/dbscan.c"
 #include "../c/tdbscan.h"
-#include "../c/distance.h"
+#include "../c/distance.c"
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */

@@ -4,7 +4,7 @@ cdef extern from "time.h":
     long int time(int)
 
 
-cdef extern from "../c/dbscan.h":
+cdef extern from "../c/dbscan.c":
     long long int * dbscan(long double ** data, unsigned long long int sample_count, unsigned long long int dimension_count, long double eps, long long int min_points, long double (*distance_func)(long double *, long double *, unsigned long long int), bint verbose)
 
 cdef extern from "../c/tdbscan.h":
@@ -17,7 +17,7 @@ cdef extern from "../c/tdbscan.h":
     TDBSCAN_Results * tdbscan(long double ** data, unsigned long long int sample_count, unsigned long long int dimension_count, long double eps, long double c_eps, long long int min_points, long double (*distance_func)(long double *, long double *, unsigned long long int), bint verbose)
 
 
-cdef extern from "../c/distance.h":
+cdef extern from "../c/distance.c":
     long double euclidean_distance(long double * point1, long double * point2, unsigned long long int dimension_count)
     long double great_circle_distance(long double * point1, long double * point2, unsigned long long int dimension_count)
 
