@@ -1,6 +1,6 @@
-#include "dbscan.c"
+#include "dbscan.h"
 #include "tdbscan.h"
-#include "distance.c"
+#include "distance.h"
 
 int main() {
   unsigned long long int sample_count = 141;

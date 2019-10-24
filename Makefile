@@ -1,7 +1,13 @@
 CC=gcc
-CCFLAGS = -Wall -fopenmp -g
-SRC=./src/c/
+CCFLAGS = -Wall -fopenmp -g -O2
+CPP=g++
+CPPFLAGS = -Wall -fopenmp -g -O2 -std=c++11
+SWIG=./swig/
+SRC=./src/
+SRC_C=$(SRC)c/
+SRC_CPP=$(SRC)cpp/
 BIN=./bin/
+PYTHONLIB=highp
 PYTHON27CFLAGS = $(shell python-config --cflags)
 PYTHON27INCLUDES = $(shell python-config --includes)
 PYTHON27LDFLAGS = $(shell python-config --ldflags)
@@ -11,15 +17,29 @@ PYTHON3LDFLAGS = $(shell python3-config --ldflags)
 
 test:
 	mkdir -p $(BIN)
-	$(CC) $(CCFLAGS) -o $(BIN)test $(SRC)test.c -lm
+	$(CC) $(CCFLAGS) -o $(BIN)test $(SRC_C)test.c -lm
+	# $(BIN)test
+	$(CPP) $(CPPFLAGS) -o $(BIN)test $(SRC_CPP)test.cpp
+	$(BIN)test
 
 python:
 	python setup.py build_ext --inplace
 
 build:
-	mkdir -p $(BIN)
-	swig -outdir $(BIN) -python $(SRC)dbscan.i 
+	mkdir -p $(PYTHONLIB)
+	echo "" > $(PYTHONLIB)/__init__.py
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)fuzzy.i
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)distance.i
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)dbscan.i
+	python setup.py build_ext --inplace
 
-	$(CC) -fPIC -c $(SRC)dbscan.c $(SRC)dbscan_wrap.c $(PYTHON27INCLUDES)
+install:
+	mkdir -p $(PYTHONLIB)
+	echo "" > $(PYTHONLIB)/__init__.py
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)fuzzy.i
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)distance.i
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)dbscan.i
+	python setup.py install
 
-	ld -shared dbscan_wrap.o dbscan.o -o $(BIN)_cluster.so
+clean:
+	rm -rf build dist bin swig/*.cxx $(PYTHONLIB)

@@ -1,28 +1,23 @@
 from distutils.core import setup
 from distutils.extension import Extension
 
-try:
-    from Cython.Distutils import build_ext
-except ImportError:
-    use_cython = False
-else:
-    use_cython = True
+dbscan_module = Extension('highp._dbscan',
+                          sources=['swig/dbscan_wrap.cxx','src/cpp/dbscan.cpp'],
+                          extra_compile_args=['--std=c++11']
+                         )
+fuzzy_module = Extension('highp._fuzzy',
+                          sources=['swig/fuzzy_wrap.cxx','src/cpp/fuzzy.cpp'],
+                          extra_compile_args=['--std=c++11']
+                         )
+distance_module = Extension('highp._distance',
+                         sources=['swig/distance_wrap.cxx','src/cpp/distance.cpp'],
+                         extra_compile_args=['--std=c++11']
+                         )
 
-cmdclass = {}
-ext_modules = []
-
-if use_cython:
-    ext_modules += [
-        Extension("clustering", ["src/cython/dbscan.pyx"], extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp']),
-    ]
-    cmdclass.update({'build_ext': build_ext})
-else:
-    ext_modules += [
-        Extension("clustering", ["cython/dbscan.c"], extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp']),
-    ]
-
-setup(
-    name='hpclustering',
-    cmdclass=cmdclass,
-    ext_modules=ext_modules,
-)
+setup (name = 'highp',
+       version = '0.1',
+       author      = "Doug Fenstermacher",
+       description = """High performance implementations of various algorithms""",
+       ext_modules = [dbscan_module, distance_module, fuzzy_module],
+       py_modules = ["highp.fuzzy", "highp.distance", "highp.dbscan"],
+       )
