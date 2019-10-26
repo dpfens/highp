@@ -61,20 +61,21 @@ namespace density {
         virtual std::vector<std::vector<double> > calculate_distances(std::vector<std::vector<T> > &data) {
             size_t data_size = data.size(), i = 0, j = 0;
             std::vector<std::vector<double> > output(data_size);
-            std::vector<T> point1, point2;
-            double dist;
 
             for(auto i = 0; i < data_size; ++i) {
                 std::vector<double> row(data_size);
                 output.at(i) = row;
             }
             i = 0;
+            #pragma omp parallel for private(i, j) shared(data)
             for (i = 0; i < data_size; ++i) {
-                point1 = data.at(i);
+                std::vector<T> point1 = data.at(i), point2;
                 for(j = i; j < data_size; ++j) {
-                    dist = m_distance(point1, data.at(j));
-                    output.at(i).at(j) = dist;
-                    output.at(j).at(i) = dist;
+                    double dist = m_distance(point1, data.at(j));
+                    #pragma omp critical
+                    output[i][j] = dist;
+                    #pragma omp critical
+                    output[j][i] = dist;
                 }
             }
             return output;

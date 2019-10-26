@@ -34,7 +34,7 @@ int main() {
     long double max_epsilon = 8;
     unsigned long int min_points = 1;
     unsigned long int max_points = 3;
-    density::fuzzy::DBSCAN<double> clf = density::fuzzy::DBSCAN<double>(min_epsilon, max_epsilon, min_points, max_points, distance::euclidean_distance<double>);
+    density::fuzzy::DBSCAN<double> clf = density::fuzzy::DBSCAN<double>(min_epsilon, max_epsilon, min_points, max_points, distance::euclidean<double>);
     std::vector<std::map<int, double> > clusters = clf.predict(other_data);
     for (auto i = clusters.begin(); i != clusters.end(); ++i) {
         size_t index = std::distance(clusters.begin(), i);

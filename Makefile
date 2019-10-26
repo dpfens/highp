@@ -31,6 +31,7 @@ build:
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)fuzzy.i
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)distance.i
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)dbscan.i
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)similarity.i
 	python setup.py build_ext --inplace
 
 install:
@@ -39,6 +40,7 @@ install:
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)fuzzy.i
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)distance.i
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)dbscan.i
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)similarity.i
 	python setup.py install
 
 clean:

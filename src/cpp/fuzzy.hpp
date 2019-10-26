@@ -53,20 +53,23 @@ namespace density {
             virtual std::vector<std::vector<double> > calculate_distances(std::vector<std::vector<T> > &data) {
                 size_t data_size = data.size(), i = 0, j = 0;
                 std::vector<std::vector<double> > output(data_size);
-                std::vector<T> point1, point2;
-                double dist;
+
 
                 for(auto i = 0; i < data_size; ++i) {
                     std::vector<double> row(data_size);
                     output.at(i) = row;
                 }
                 i = 0;
+                #pragma omp parallel for private(i, j) shared(data)
                 for (i = 0; i < data_size; ++i) {
+                    std::vector<T> point1, point2;
                     point1 = data.at(i);
                     for(j = i; j < data_size; ++j) {
-                        dist = m_distance(point1, data.at(j));
-                        output.at(i).at(j) = dist;
-                        output.at(j).at(i) = dist;
+                        double dist = m_distance(point1, data.at(j));
+                        #pragma omp critical
+                        output[i][j] = dist;
+                        #pragma omp critical
+                        output[j][i] = dist;
                     }
                 }
                 return output;
@@ -240,27 +243,24 @@ namespace density {
                         fuzzy_border_points.erase(std::remove(fuzzy_border_points.begin(), fuzzy_border_points.end(), *it), fuzzy_border_points.end());
                     };
                 }
-                double min_membership;
-                double cluster_membership;
-                std::vector<T> fuzzy_border_point;
-                std::vector<size_t> neighbor_core;
-                double distance;
-                size_t n_seed;
-
-                for(auto it = fuzzy_border_points.begin(); it != fuzzy_border_points.end(); ++it) {
-                    n_neighbors = this->neighbors(distance_matrix, *it, m_max_epsilon);
+                // process fuzzy border points
+                i = 0;
+                #pragma omp parallel for private(i, n_neighbors)
+                for(i = 0; i < fuzzy_border_points.size(); ++i) {
+                    size_t point_index = fuzzy_border_points[i];
+                    n_neighbors = this->neighbors(distance_matrix, point_index, m_max_epsilon);
                     // getting neighbors that are also core objects
-                    neighbor_core = vector_intersection(n_neighbors, core);
-                    min_membership = 1.0;
+                    std::vector<size_t> neighbor_core = vector_intersection(n_neighbors, core);
+                    double min_membership = 1.0;
                     for(auto n_it = neighbor_core.begin(); n_it != neighbor_core.end(); ++n_it) {
-                        n_seed = *n_it;
-                        distance = distance_matrix.at(*it).at(n_seed);
-                        cluster_membership = membership(distance);
+                        size_t n_seed = *n_it;
+                        double distance = distance_matrix.at(point_index).at(n_seed);
+                        double cluster_membership = membership(distance);
                         if (cluster_membership > 0 && cluster_membership < min_membership) {
                             min_membership = cluster_membership;
                         }
                     }
-                    clusters.at(*it)[cluster_id] = min_membership;
+                    clusters.at(point_index)[cluster_id] = min_membership;
                 }
 
             }
@@ -449,10 +449,8 @@ namespace density {
                     index_density = density(distance_matrix, index, point_neighbors);
                     index_core_membership = core_membership(index_density);
                     if (index_core_membership == 0) {
-                        std::cout << "Outlier: " << index << ", Point neighbors: " << point_neighbors.size() << ", Membership: " << index_density << ", core membership: " << index_core_membership << "\n";
                         clusters.at(index)[-1] = 1.0;
                     } else {
-                        std::cout << "Core: " << index << "\n";
                         cluster_id += 1;
                         clusters.at(index)[cluster_id] = index_core_membership;
                         expand_cluster(distance_matrix, index, point_neighbors, clusters, cluster_id, visited);
