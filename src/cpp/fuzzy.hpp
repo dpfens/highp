@@ -38,7 +38,7 @@ namespace density {
             unsigned long int m_min_points;
             double (* m_distance)(std::vector<T>, std::vector<T>);
 
-            virtual std::vector<size_t> neighbors(std::vector<std::vector<T> > &distance_matrix, size_t index, double epsilon) {
+            virtual std::vector<size_t> neighbors(const std::vector<std::vector<T> > &distance_matrix, const size_t index, const double &epsilon) {
                 std::vector<size_t> output;
                 std::vector<double> row = distance_matrix.at(index);
                 for(auto it = row.begin(); it != row.end(); ++it) {
@@ -50,22 +50,27 @@ namespace density {
                 return output;
             }
 
-            virtual std::vector<std::vector<double> > calculate_distances(std::vector<std::vector<T> > &data) {
+            virtual std::vector<std::vector<double> > calculate_distances(const std::vector<std::vector<T> > &data) {
                 size_t data_size = data.size(), i = 0, j = 0;
                 std::vector<std::vector<double> > output(data_size);
 
 
-                for(auto i = 0; i < data_size; ++i) {
+                for(i = 0; i < data_size; ++i) {
                     std::vector<double> row(data_size);
                     output.at(i) = row;
                 }
-                i = 0;
                 #pragma omp parallel for private(i, j) shared(data)
                 for (i = 0; i < data_size; ++i) {
                     std::vector<T> point1, point2;
                     point1 = data.at(i);
                     for(j = i; j < data_size; ++j) {
-                        double dist = m_distance(point1, data.at(j));
+                        point2 = data.at(j);
+                        double dist;
+                        if (j == i || point1 == point2) {
+                            dist = 0;
+                        } else {
+                            dist = m_distance(point1, point2);
+                        }
                         #pragma omp critical
                         output[i][j] = dist;
                         #pragma omp critical
@@ -97,7 +102,7 @@ namespace density {
             unsigned long int m_max_points;
             double (* m_distance)(std::vector<T>, std::vector<T>);
 
-            void expand_cluster(std::vector<std::vector<T> > &distance_matrix, const size_t index, std::vector<size_t> index_neighbors, std::vector<std::map<int, double> > &clusters, int cluster_id) {
+            void expand_cluster(const std::vector<std::vector<T> > &distance_matrix, const size_t index, std::vector<size_t> index_neighbors, std::vector<std::map<int, double> > &clusters, int cluster_id) {
                 std::vector<size_t> seed_neighbors = index_neighbors, n_neighbors, n_n_neighbors, visited;
                 visited.push_back(index);
                 std::vector<T> neighbor;
@@ -139,7 +144,7 @@ namespace density {
                 }
             }
 
-            double membership(std::vector<size_t> neighborhood) {
+            double membership(const std::vector<size_t> &neighborhood) {
                 size_t neighborhood_size = neighborhood.size();
                 if (neighborhood_size >= m_max_points) {
                     return 1.0;
@@ -163,7 +168,7 @@ namespace density {
                 }
                 ~CoreDBSCAN() {};
 
-                std::vector<std::map<int, double> > predict(std::vector<std::vector<T> > data) {
+                std::vector<std::map<int, double> > predict(const std::vector<std::vector<T> > &data) {
                     const std::size_t sample_count = data.size();
                     std::vector<std::map<int, double> > clusters(sample_count);
 
@@ -171,7 +176,7 @@ namespace density {
                     int index;
                     double cluster_membership;
 
-                    std::vector<std::vector<double> > distance_matrix = this->calculate_distances(data);
+                    const std::vector<std::vector<double> > distance_matrix = this->calculate_distances(data);
                     for(auto it = data.begin(); it != data.end(); ++it) {
                         index = std::distance(data.begin(), it);
                         if (!clusters.at(index).empty()) {
@@ -202,7 +207,7 @@ namespace density {
             unsigned long int m_min_points;
             double (* m_distance)(std::vector<T>, std::vector<T>);
 
-            void expand_cluster(std::vector<std::vector<T> > &distance_matrix, const size_t index, std::vector<size_t> index_neighbors, std::vector<std::map<int, double> > &clusters, int cluster_id, std::vector<bool> &visited) {
+            void expand_cluster(const std::vector<std::vector<T> > &distance_matrix, const size_t index, std::vector<size_t> index_neighbors, std::vector<std::map<int, double> > &clusters, int cluster_id, std::vector<bool> &visited) {
                 std::vector<size_t> n_neighbors, fuzzy_border_points, n_fuzzy_border_points;
                 clusters.at(index)[cluster_id] = 1.0;
                 std::vector<size_t> core = {index};
@@ -265,14 +270,14 @@ namespace density {
 
             }
 
-            double membership(double distance) {
+            double membership(const double distance) {
                 if (distance <= m_min_epsilon) {
                     return 1.0;
                 } else if (distance > m_max_epsilon) {
                     return 0.0;
                 }
-                double min_max_difference = m_max_epsilon - m_min_epsilon;
-                double neighbor_difference = m_max_epsilon - distance;
+                const double min_max_difference = m_max_epsilon - m_min_epsilon;
+                const double neighbor_difference = m_max_epsilon - distance;
                 return neighbor_difference / min_max_difference;
             }
 
@@ -288,7 +293,7 @@ namespace density {
             }
             ~BorderDBSCAN() {};
 
-            std::vector<std::map<int, double> > predict(std::vector<std::vector<T> > data) {
+            std::vector<std::map<int, double> > predict(const std::vector<std::vector<T> > &data) {
                 const std::size_t sample_count = data.size();
                 std::vector<std::map<int, double> > clusters(sample_count);
                 std::vector<bool> visited(sample_count);
@@ -298,9 +303,8 @@ namespace density {
                     index = std::distance(data.begin(), it);
                     visited[index] = false;
                 }
-                std::vector<std::vector<double> > distance_matrix = this->calculate_distances(data);
+                const std::vector<std::vector<double> > distance_matrix = this->calculate_distances(data);
                 int cluster_id = 0;
-                int count = 0;
                 for(auto it = data.begin(); it != data.end(); ++it) {
                     index = std::distance(data.begin(), it);
                     if (visited.at(index)) {
@@ -312,7 +316,6 @@ namespace density {
                     if (point_neighbors.size() <= m_min_points) {
                         clusters.at(index)[-1] = 1.0;
                     } else {
-                        ++count;
                         expand_cluster(distance_matrix, index, point_neighbors, clusters, cluster_id, visited);
                         cluster_id += 1;
                      }
@@ -330,7 +333,7 @@ namespace density {
             unsigned long int m_min_points;
             unsigned long int m_max_points;
 
-            void expand_cluster(std::vector<std::vector<T> > &distance_matrix, const size_t index, std::vector<size_t> index_neighbors, std::vector<std::map<int, double> > &clusters, int cluster_id, std::vector<bool> &visited) {
+            void expand_cluster(const std::vector<std::vector<T> > &distance_matrix, const size_t index, std::vector<size_t> index_neighbors, std::vector<std::map<int, double> > &clusters, int cluster_id, std::vector<bool> &visited) {
                 std::vector<size_t> n_neighbors, n_n_neighbors, core = {index};
                 visited.push_back(index);
                 std::vector<T> neighbor;
@@ -376,31 +379,31 @@ namespace density {
                 }
             }
 
-            double core_membership(double density) {
+            double core_membership(const double density) {
                 if (density >= m_max_points) {
                     return 1.0;
                 } else if (density <= m_min_points) {
                     return 0.0;
                 }
-                double min_max_difference = m_max_points - m_min_points;
-                double neighbor_difference = density - m_min_points;
+                const double min_max_difference = m_max_points - m_min_points;
+                const double neighbor_difference = density - m_min_points;
                 return neighbor_difference / min_max_difference;
             }
 
-            double distance_membership(double distance) {
+            double distance_membership(const double distance) {
                 if (distance <= m_min_epsilon) {
                     return 1.0;
                 } else if (distance > m_max_epsilon) {
                     return 0.0;
                 }
-                double min_max_difference = m_max_epsilon - m_min_epsilon;
-                double neighbor_difference = m_max_epsilon - distance;
+                const double min_max_difference = m_max_epsilon - m_min_epsilon;
+                const double neighbor_difference = m_max_epsilon - distance;
                 return neighbor_difference / min_max_difference;
             }
 
-            double density(std::vector<std::vector<T> > &distance_matrix, int index, std::vector<size_t> &neighbors) {
+            double density(const std::vector<std::vector<T> > &distance_matrix, const int index, const std::vector<size_t> &neighbors) {
                 double output = 0.0;
-                std::vector<double> row = distance_matrix.at(index);
+                const std::vector<double> row = distance_matrix.at(index);
                 for(auto it = neighbors.begin(); it != neighbors.end(); ++it) {
                     output += distance_membership(row.at(*it));
                 }
@@ -423,7 +426,7 @@ namespace density {
                 m_distance = distance_func;
             }
             ~DBSCAN() {};
-            std::vector<std::map<int, double> > predict(std::vector<std::vector<T> > data) {
+            std::vector<std::map<int, double> > predict(std::vector<std::vector<T> > &data) {
                 const std::size_t sample_count = data.size();
                 std::vector<std::map<int, double> > clusters(sample_count);
                 std::vector<bool> visited(sample_count);
@@ -435,7 +438,7 @@ namespace density {
                     visited[index] = false;
                 }
 
-                std::vector<std::vector<double> > distance_matrix = this->calculate_distances(data);
+                const std::vector<std::vector<double> > distance_matrix = this->calculate_distances(data);
                 int cluster_id = 0;
                 double index_density;
                 double index_core_membership;
