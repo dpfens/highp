@@ -65,7 +65,7 @@ namespace density {
                 std::vector<double> row(data_size);
                 output.at(i) = row;
             }
-            #pragma omp parallel for private(i, j) shared(data)
+            #pragma omp parallel for if(data_size > 2000) private(i, j) shared(data)
             for (i = 0; i < data_size; ++i) {
                 std::vector<T> point1 = data.at(i), point2;
                 for(j = i; j < data_size; ++j) {

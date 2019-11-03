@@ -59,7 +59,7 @@ namespace density {
                     std::vector<double> row(data_size);
                     output.at(i) = row;
                 }
-                #pragma omp parallel for private(i, j) shared(data)
+                #pragma omp parallel for if(data_size > 2000) private(i, j) shared(data)
                 for (i = 0; i < data_size; ++i) {
                     std::vector<T> point1, point2;
                     point1 = data.at(i);
@@ -250,8 +250,9 @@ namespace density {
                 }
                 // process fuzzy border points
                 i = 0;
-                #pragma omp parallel for private(i, n_neighbors)
-                for(i = 0; i < fuzzy_border_points.size(); ++i) {
+                size_t fuzzy_border_point_count = fuzzy_border_points.size();
+                #pragma omp parallel for if(fuzzy_border_point_count > 500) private(i, n_neighbors)
+                for(i = 0; i < fuzzy_border_point_count; ++i) {
                     size_t point_index = fuzzy_border_points[i];
                     n_neighbors = this->neighbors(distance_matrix, point_index, m_max_epsilon);
                     // getting neighbors that are also core objects
