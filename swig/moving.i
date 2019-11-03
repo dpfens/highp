@@ -1,9 +1,9 @@
 
- %module dbscan
+ %module moving
  %{
  /* Put header files here or function declarations like below */
  using namespace std;
- #include "../src/cpp/dbscan.hpp"
+ #include "../src/cpp/moving.hpp"
  %}
 
  %include "std_vector.i"
@@ -12,7 +12,8 @@
      %template(vectori) std::vector<int>;
      %template(vectord) std::vector<double>;
      %template(VecVecdouble) std::vector< std::vector<double> >;
+     %template(VecVecVecdouble) std::vector<std::vector< std::vector<double> > >;
  }
- %include "../src/cpp/dbscan.hpp"
+ %include "../src/cpp/moving.hpp"
 
- %template(NormalDBSCAN) density::DBSCAN<double>;
+ %template(NormalMovingDBSCAN) density::moving::MovingDBSCAN<double>;

@@ -3,7 +3,6 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include "distance.cpp"
 
 namespace density {
 
@@ -80,6 +79,7 @@ namespace density {
         }
 
     public:
+        DBSCAN(){};
         DBSCAN(const double epsilon, const long int min_points, double (* distance_func)(std::vector<T>, std::vector<T>)) {
             assert(epsilon > 0);
             assert(min_points > 0);

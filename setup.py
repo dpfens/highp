@@ -8,6 +8,11 @@ dbscan_module = Extension('highp._dbscan',
                           extra_compile_args=compile_args,
                           extra_link_args=link_args
                          )
+moving_module = Extension('highp._moving',
+                          sources=['swig/moving_wrap.cxx','src/cpp/moving.cpp'],
+                          extra_compile_args=compile_args,
+                          extra_link_args=link_args
+                         )
 fuzzy_module = Extension('highp._fuzzy',
                           sources=['swig/fuzzy_wrap.cxx','src/cpp/fuzzy.cpp'],
                           extra_compile_args=compile_args,
@@ -28,6 +33,6 @@ setup (name = 'highp',
        version = '0.1',
        author      = "Doug Fenstermacher",
        description = """High performance implementations of various algorithms""",
-       ext_modules = [dbscan_module, distance_module, fuzzy_module, similarity_module],
-       py_modules = ["highp.fuzzy", "highp.distance", "highp.dbscan", "highp.similarity"],
+       ext_modules = [dbscan_module, moving_module, distance_module, fuzzy_module, similarity_module],
+       py_modules = ["highp.fuzzy", "highp.distance", "highp.dbscan", "highp.moving", "highp.similarity"],
        )
