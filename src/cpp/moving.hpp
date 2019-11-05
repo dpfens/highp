@@ -2,6 +2,7 @@
 #include <set>
 #include <map>
 #include <algorithm>
+#include <tuple>
 
 namespace density {
 
@@ -75,8 +76,6 @@ namespace density {
                             unique_clusters.insert(i);
                         }
 
-                        std::cout << "Processing Column #" << column << "\n";
-
                         if (column == 0) {
                             previous_unique_clusters = unique_clusters;
                             used_clusters = unique_clusters;
@@ -146,6 +145,116 @@ namespace density {
                         }
                         output[i] = row;
                     }
+                    return output;
+            }
+        };
+
+        struct ConvoyCandidate {
+            std::vector<size_t> indices = {};
+            bool is_assigned = false;
+            size_t start_time = 0;
+            size_t end_time = 0;
+        };
+
+
+        template <typename T>
+        class CMC {
+            /*
+            An implementation of the Coherence Moving Cluster (CMC) algorithm used to
+            identify convoys/flocks from trajectory data.  A convoy/flock is defined
+            as a group of objects that move together (within some minimum distance
+            of each other) over time for more than some minimum duration of time.
+
+            Examples: commuters along a common route, migrating animals, etc
+
+            k: minimum lifetime constraint
+            m: minimum number of common objects
+
+            Original paper: Discovery of Convoys in Trajectory Databases
+            https://arxiv.org/pdf/1002.0963.pdf
+            */
+
+            private:
+                density::DBSCAN<T> m_estimator;
+                unsigned int m_k;
+                unsigned int m_m;
+
+            public:
+                CMC(density::DBSCAN<T>& estimator, const unsigned int k, const unsigned int m) {
+                    assert(k > 0);
+                    assert(m > 0);
+                    m_estimator = estimator;
+                    m_k = k;
+                    m_m = m;
+                }
+                virtual ~CMC() {};
+
+                std::tuple<std::vector<std::vector<size_t> >, std::vector<size_t>, std::vector<size_t> > predict(const std::vector< std::vector<std::vector<T> > > &data) {
+                    const size_t columns = data.front().size();
+                    const size_t data_size = data.size();
+
+                    std::vector<std::vector<size_t> > indices;
+                    std::vector<size_t> start_times;
+                    std::vector<size_t> end_times;
+                    std::vector<ConvoyCandidate> convoy_candidates;
+
+                    std::set<int> used_clusters;
+                    std::set<int> previous_unique_clusters;
+                    std::vector<int> previous_clusters;
+                    for (size_t column = 0; column < columns; ++column) {
+                        std::vector<std::vector<T> > column_data = std::vector<std::vector<T> >(data_size);
+                        for (size_t i = 0; i < data_size; ++i) {
+                            column_data[i] = data[i][column];
+                        }
+                        std::vector<int> clusters = m_estimator.predict(column_data);
+                        std::vector<ConvoyCandidate> current_candidates;
+                        std::set<int> unique_clusters;
+                        for (const int &i: clusters) {
+                            if (i < 0) { continue; }
+                            unique_clusters.insert(i);
+                        }
+                        std::vector<ConvoyCandidate> potential_convoys(unique_clusters.size());
+                        for(size_t i = 0; i < data_size; ++i) {
+                            int cluster = clusters[i];
+                            if (cluster < 0) {
+                                continue;
+                            }
+                            potential_convoys[cluster].indices.push_back(i);
+                        }
+
+                        for (size_t i = 0; i < convoy_candidates.size(); ++i) {
+                            convoy_candidates[i].is_assigned = false;
+                            for (size_t j = 0; j < potential_convoys.size(); ++j) {
+                                ConvoyCandidate potential_convoy = potential_convoys[j];
+                                std::vector<size_t> cluster_candidate_intersections = vector_intersection(potential_convoy.indices, convoy_candidates[i].indices);
+                                if (cluster_candidate_intersections.size() < m_m) {
+                                    continue;
+                                }
+                                convoy_candidates[i].indices = cluster_candidate_intersections;
+                                convoy_candidates[i].end_time = column;
+                                convoy_candidates[i].is_assigned = true;
+                                potential_convoys[j].is_assigned = true;
+                                current_candidates.push_back(convoy_candidates[i]);
+                            }
+                            // creating new candidates
+                            size_t lifetime = convoy_candidates[i].end_time - convoy_candidates[i].start_time;
+                            if ((!convoy_candidates[i].is_assigned || column == columns - 1) && lifetime >= m_k) {
+                                indices.push_back(convoy_candidates[i].indices);
+                                start_times.push_back(convoy_candidates[i].start_time);
+                                end_times.push_back(convoy_candidates[i].end_time);
+                            }
+                        }
+                        for (size_t i = 0; i < potential_convoys.size(); ++i) {
+                            if (potential_convoys[i].is_assigned) {
+                                continue;
+                            }
+                            potential_convoys[i].start_time = column;
+                            potential_convoys[i].end_time = column;
+                            current_candidates.push_back(potential_convoys[i]);
+                        }
+                        convoy_candidates = current_candidates;
+                    }
+                    std::tuple<std::vector<std::vector<size_t>>, std::vector<size_t>, std::vector<size_t> > output = std::tie(indices, start_times, end_times);
                     return output;
                 }
         };
