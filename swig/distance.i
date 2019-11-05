@@ -31,3 +31,5 @@ namespace std {
 %template(average_euclidean) distance::average_euclidean<double>;
 %pythoncallback;
 %template(euclidean) distance::euclidean<double>;
+%pythoncallback;
+%template(chebyshev) distance::chebyshev<double>;

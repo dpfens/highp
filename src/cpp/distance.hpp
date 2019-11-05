@@ -134,4 +134,21 @@ namespace distance {
         double distance = 1.0 - (xy_sum / sqrt(x_sum * y_sum) );
         return distance;
     }
+
+    template <typename T>
+    double chebyshev(std::vector<T> point1, std::vector<T> point2) {
+        std::size_t dimension1 = point1.size();
+        std::size_t dimension2 = point2.size();
+        if (dimension1 != dimension2){
+            return -1;
+        }
+        double distance = 0.0;
+        for (std::size_t i = 0; i < dimension1; i++){
+            double value = abs(point1[i] - point2[i]);
+            if (value > distance) {
+                distance = value;
+            }
+        }
+        return distance;
+    }
 }
