@@ -1,6 +1,7 @@
 #include "fuzzy.cpp"
 #include "distance.cpp"
 #include "moving.cpp"
+#include "similarity.cpp"
 
 template <class T, class T2>
 void print_map(std::map<T, T2> &data) {
@@ -182,9 +183,9 @@ int main() {
     }*/
 
     long double min_epsilon = 1;
-    long double max_epsilon = 8;
-    unsigned long int min_points = 1;
-    unsigned long int max_points = 3;
+    long double max_epsilon = 10;
+    unsigned long int min_points = 2;
+    unsigned long int max_points = 4;
     density::fuzzy::DBSCAN<double> fuzzy_clf = density::fuzzy::DBSCAN<double>(min_epsilon, max_epsilon, min_points, max_points, distance::euclidean<double>);
     std::vector<std::map<int, double> > clusters = fuzzy_clf.predict(other_data);
     for (auto i = clusters.begin(); i != clusters.end(); ++i) {
@@ -193,6 +194,8 @@ int main() {
         print_map(*i);
         std::cout << '\n';
     }
+    double similarity = similarity::fuzzy::hwang_yang_hung<int>(clusters, 6, 7);
+    std::cout << "similarity: " << similarity << "\n";
     double epsilon = 5.0;
     min_points = 2;
     density::DBSCAN<double> clf = density::DBSCAN<double>(epsilon, min_points, distance::euclidean<double>);
