@@ -1,7 +1,9 @@
 #include <vector>
 #include <math.h>
+#include <limits>
 
 namespace distance {
+
     template <typename T>
     double sad(std::vector<T> point1, std::vector<T> point2) {
         // Sum of Absolute Difference (SAD)
@@ -150,5 +152,51 @@ namespace distance {
             }
         }
         return distance;
+    }
+
+    template <class T, class T2>
+    double hausdorff(std::vector<T> &point1, std::vector<T> &point2, double (* distance_func)(T, T)) {
+        std::size_t point1_size = point1.size();
+        std::size_t point2_size = point2.size();
+        double max_double = std::numeric_limits<double>::max();
+        double c_max = 0.0;
+
+        std::size_t i = 0;
+        #pragma omp parallel for private(i) shared(point1, point2)
+        for (i = 0; i < point1_size; ++i) {
+            double c_min = max_double;
+            for (std::size_t j = 0; j < point2_size; ++j) {
+                double distance = distance_func(point1[i], point2[j]);
+                if (distance < c_min) {
+                    c_min = distance;
+                }
+                if (c_min < c_max) {
+                    break;
+                }
+            }
+            #pragma omp critical
+            if (c_min > c_max && max_double > c_min) {
+                c_max = c_min;
+            }
+        }
+
+        #pragma omp parallel for private(i) shared(point1, point2)
+        for (i = 0; i < point2_size; ++i) {
+            double c_min = max_double;
+            for (std::size_t j = 0; j < point1_size; ++j) {
+                double distance = distance_func(point2[i], point1[j]);
+                if (distance < c_min) {
+                    c_min = distance;
+                }
+                if (c_min < c_max) {
+                    break;
+                }
+            }
+            #pragma omp critical
+            if (c_min > c_max && max_double > c_min) {
+                c_max = c_min;
+            }
+        }
+        return c_max;
     }
 }
