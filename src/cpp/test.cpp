@@ -2,6 +2,7 @@
 #include "distance.cpp"
 #include "moving.cpp"
 #include "similarity.cpp"
+#include "binary.hpp"
 
 template <class T, class T2>
 void print_map(std::map<T, T2> &data) {

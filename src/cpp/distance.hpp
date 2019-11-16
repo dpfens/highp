@@ -199,4 +199,320 @@ namespace distance {
         }
         return c_max;
     }
+
+
+    namespace binary {
+        template <typename T>
+        double yuleqDistance(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0,
+            d = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                } else {
+                    ++d;
+                }
+            }
+            double ad = a * d;
+            double bc = b * c;
+            double numerator = 2 * bc;
+            double denominator = ad + bc;
+            return numerator / denominator;
+        }
+
+
+        template <typename T>
+        double hamming(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double b = 0.0,
+            c = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                }
+            }
+            return b + c;
+        }
+
+
+        template <typename T>
+        double euclid(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double b = 0.0,
+            c = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                }
+            }
+            return sqrt(b + c);
+        }
+
+
+        template <typename T>
+        double meanManhattan(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0,
+            d = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                } else {
+                    ++d;
+                }
+            }
+            double n = a + b + c + d;
+            return (b + c) / n;
+        }
+
+
+        template <typename T>
+        double vari(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0,
+            d = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                } else {
+                    ++d;
+                }
+            }
+            double n = a + b + c + d;
+            return (b + c) / (4 * n);
+        }
+
+
+        template <typename T>
+        double sizeDifference(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0,
+            d = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                } else {
+                    ++d;
+                }
+            }
+            double n = a + b + c + d;
+            return pow(b + c, 2) / pow(n, 2);
+        }
+
+
+        template <typename T>
+        double shapeDifference(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0,
+            d = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                } else {
+                    ++d;
+                }
+            }
+            double n = a + b + c + d;
+            double numerator =  n * (b + c) - pow(b - c, 2);
+            return numerator / pow(n, 2);
+        }
+
+
+        template <typename T>
+        double patternDifference(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0,
+            d = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                } else {
+                    ++d;
+                }
+            }
+            double n = a + b + c + d;
+            return (4 * b * c) / pow(n, 2);
+        }
+
+
+        template <typename T>
+        double lanceWilliams(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                }
+            }
+            return (b + c) / ((2 * a) + b + c);
+        }
+
+
+        template <typename T>
+        double brayCurtis(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                }
+            }
+            return (b + c) / ((2 * a) + b + c);
+        }
+
+
+        template <typename T>
+        double hellinger(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                }
+            }
+            double denominator = sqrt((a + b) * (a + c));
+            double value = a / denominator;
+            return 2 * sqrt(1 - value);
+        }
+
+
+        template <typename T>
+        double chord(std::vector<T> obj1, std::vector<T> obj2) {
+
+            std::size_t d1 = obj1.size(), d2 = obj2.size();
+
+            if (d1 != d2) {
+                return 0.0;
+            }
+            double a = 0.0,
+            b = 0.0,
+            c = 0.0;
+            for (std::size_t i = 0; i < d1; ++i) {
+                if (obj1[i] && obj2[i]) {
+                    ++a;
+                } else if (obj1[i] && !obj2[i]) {
+                    ++b;
+                } else if (!obj1[i] && obj2[i]) {
+                    ++c;
+                }
+            }
+            double denominator = sqrt((a + b) * (a + c));
+            double value = 1 - (a / denominator);
+            return sqrt(2 * value);
+        }
+    }
 }
