@@ -3,6 +3,7 @@
 #include "moving.cpp"
 #include "similarity.cpp"
 #include "binary.hpp"
+#include "kmeans.cpp"
 
 template <class T, class T2>
 void print_map(std::map<T, T2> &data) {
@@ -219,4 +220,12 @@ int main() {
         print_vector<size_t>(convoy_indices[i]);
         std::cout << "Start: " << start_times[i] << ", End: " << end_times[i] << "\n";
     }
+
+    long int kmeans_k = 5;
+    long int max_iterations = 100;
+    double tolerance = 1;
+    std::vector<std::vector<double >> centroids;
+    std::vector<long int> kmeans_clusters;
+    clustering::KMeans<double> kmeans_clf = clustering::KMeans<double>(kmeans_k, max_iterations, tolerance, distance::euclidean<double>);
+    std::tie(centroids, kmeans_clusters) = kmeans_clf.predict(other_data);
 }
