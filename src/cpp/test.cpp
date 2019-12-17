@@ -228,4 +228,10 @@ int main() {
     std::vector<long int> kmeans_clusters;
     clustering::KMeans<double> kmeans_clf = clustering::KMeans<double>(kmeans_k, max_iterations, tolerance, distance::euclidean<double>);
     std::tie(centroids, kmeans_clusters) = kmeans_clf.predict(other_data);
+
+    std::vector<long int> kmedian_clusters;
+    clustering::KMedian<double> kmedian_clf = clustering::KMedian<double>(kmeans_k, max_iterations, tolerance, distance::euclidean<double>);
+    std::tie(centroids, kmedian_clusters) = kmedian_clf.predict(other_data);
+
+    clustering::KMode<long int> kmode_clf = clustering::KMode<long int>(kmeans_k, max_iterations, tolerance);
 }
