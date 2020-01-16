@@ -208,4 +208,94 @@ namespace density {
         }
     };
 
+
+
+    template <typename T>
+    class DBPack2 {
+        // A special case of DBSCAN, where points have one dimension and are
+        // sorted.  Can be used for clustering events based on when they occurred
+        // can be used for online clustering where new points are sorted relative
+        // to existing points
+
+    private:
+        double m_epsilon;
+        unsigned long int m_min_points;
+
+        std::vector<size_t> neighbors(const std::vector<T> &data, size_t &max_index) {
+            size_t sample_count = data.size();
+            T current_point = data.at(max_index), neighbor;
+            double distance = 0.0;
+            size_t neighbor_index = max_index;
+            std::vector<size_t> output;
+            output.push_back(max_index);
+            while (distance < m_epsilon && neighbor_index > 0) {
+                --neighbor_index;
+                neighbor = data.at(neighbor_index);
+                distance = abs(neighbor - current_point);
+                if (distance > m_epsilon) {
+                    break;
+                }
+                output.push_back(neighbor_index);
+            }
+            distance = 0.0;
+            neighbor_index = max_index;
+            while (distance < m_epsilon && neighbor_index < sample_count - 1) {
+                ++neighbor_index;
+                neighbor = data.at(neighbor_index);
+                distance = abs(neighbor - current_point);
+                if (distance > m_epsilon) {
+                    break;
+                }
+                output.push_back(neighbor_index);
+            }
+            return output;
+        }
+
+        void expand_cluster(const std::vector<T> &data, size_t &max_index, std::vector<size_t> index_neighbors, std::vector<int> &clusters, int cluster_id) {
+            std::vector<size_t> seed_neighbors = index_neighbors, n_neighbors;
+            std::vector<T> neighbor;
+            size_t sample_count = data.size();
+            while (max_index < sample_count) {
+                n_neighbors = neighbors(data, max_index);
+                if (static_cast<unsigned long int>(n_neighbors.size()) < m_min_points) {
+                    clusters.at(max_index) = -1;
+                    break;
+                }
+                clusters.at(max_index) = cluster_id;
+                ++max_index;
+            }
+        }
+
+    public:
+        DBPack2(const double epsilon, const unsigned long int min_points) {
+            assert(epsilon > 0);
+            assert(min_points > 0);
+            m_epsilon = epsilon;
+            m_min_points = min_points;
+        }
+        ~DBPack2() {};
+
+        std::vector<int> predict(const std::vector<T> &data) {
+            const std::size_t sample_count = data.size();
+            std::vector<int> clusters(sample_count);
+            size_t max_index = 0;
+            int cluster_id = 0;
+            while (max_index < sample_count) {
+                std::vector<size_t> point_neighbors = this->neighbors(data, max_index);
+                if (static_cast<unsigned long int>(point_neighbors.size()) < m_min_points) {
+                    clusters.at(max_index) = -1;
+                    ++max_index;
+                    continue;
+                }
+                clusters.at(max_index) = cluster_id;
+                expand_cluster(data, max_index, point_neighbors, clusters, cluster_id);
+                ++cluster_id;
+                ++max_index;
+            }
+            return clusters;
+
+
+        }
+    };
+
 };
