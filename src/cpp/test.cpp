@@ -167,11 +167,11 @@ int main() {
     {{947.0}, {1935.0}, {2985.0}, {4039.0}, {5192.0}, {6439.0}, {7752.0}, {9148.0}},
     {{1078.0}, {2178.0}, {3268.0}, {4375.0}, {5527.0}, {6692.0}, {7945.0}, {9347.0}},
     {{1061.0}, {2213.0}, {3383.0}, {4534.0}, {5729.0}, {6913.0}, {8160.0}, {9419.0}}};
-    //long double epsilon = 5;
-    //unsigned long int min_points = 2;
-    //unsigned long int max_points = 4;
-    //density::fuzzy::CoreDBSCAN<long double> clf = density::fuzzy::CoreDBSCAN<long double>(epsilon, min_points, max_points, euclidean);
-    //std::vector<std::unordered_map<int, long double> > clusters = clf.predict(data);
+    long double epsilon = 5;
+    unsigned long int min_points = 2;
+    unsigned long int max_points = 4;
+    density::fuzzy::CoreDBSCAN<double> clf = density::fuzzy::CoreDBSCAN<double>(epsilon, min_points, max_points, distance::euclidean);
+    std::vector<std::map<int, double> > clusters = clf.predict(data);
     /*long double min_epsilon = 2.1;
     long double max_epsilon = 6;
     unsigned long int min_points = 1;
@@ -186,10 +186,10 @@ int main() {
 
     long double min_epsilon = 1;
     long double max_epsilon = 10;
-    unsigned long int min_points = 2;
-    unsigned long int max_points = 4;
+    min_points = 2;
+    max_points = 4;
     density::fuzzy::DBSCAN<double> fuzzy_clf = density::fuzzy::DBSCAN<double>(min_epsilon, max_epsilon, min_points, max_points, distance::euclidean<double>);
-    std::vector<std::map<int, double> > clusters = fuzzy_clf.predict(other_data);
+    clusters = fuzzy_clf.predict(other_data);
     for (auto i = clusters.begin(); i != clusters.end(); ++i) {
         size_t index = std::distance(clusters.begin(), i);
         std::cout << "Index: " << index << ", Point: " << other_data.at(index).at(0) << " - Memberships: ";
@@ -198,10 +198,10 @@ int main() {
     }
     double similarity = similarity::fuzzy::hwang_yang_hung<int>(clusters, 6, 7);
     std::cout << "similarity: " << similarity << "\n";
-    double epsilon = 5.0;
+    epsilon = 5.0;
     min_points = 2;
-    density::DBSCAN<double> clf = density::DBSCAN<double>(epsilon, min_points, distance::euclidean<double>);
-    density::moving::MovingDBSCAN<double> moving_clf = density::moving::MovingDBSCAN<double>(clf, 0.5);
+    density::DBSCAN<double> db_clf = density::DBSCAN<double>(epsilon, min_points, distance::euclidean<double>);
+    density::moving::MovingDBSCAN<double> moving_clf = density::moving::MovingDBSCAN<double>(db_clf, 0.5);
     std::vector<std::vector<int> > results = moving_clf.predict(sequential_data);
     for (size_t i = 0; i < results.size(); i++) {
         std::cout << "\n Row #" << i << ": ";
@@ -211,7 +211,7 @@ int main() {
     }
     unsigned int k = 4;
     unsigned int m = 5;
-    density::moving::CMC<double> convoy_clf = density::moving::CMC<double>(clf, k, m);
+    density::moving::CMC<double> convoy_clf = density::moving::CMC<double>(db_clf, k, m);
     std::vector<std::vector<size_t> > convoy_indices;
     std::vector<size_t> start_times, end_times;
     std::tie(convoy_indices, start_times, end_times) = convoy_clf.predict(sequential_data);

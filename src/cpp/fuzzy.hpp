@@ -117,7 +117,7 @@ namespace density {
                         continue;
                     }
                     visited.push_back(seed);
-                    n_neighbors = neighbors(distance_matrix, seed, m_epsilon);
+                    n_neighbors = this->neighbors(distance_matrix, seed, m_epsilon);
                     if (n_neighbors.size() >= m_min_points) {
                         for(auto n_it = n_neighbors.begin(); n_it != n_neighbors.end(); ++n_it) {
                             n_index = *n_it;
@@ -133,7 +133,7 @@ namespace density {
                         min_membership = 1.0;
                         for(auto n_it = n_neighbors.begin(); n_it != n_neighbors.end(); ++n_it) {
                             n_index = *n_it;
-                            n_n_neighbors = neighbors(distance_matrix, n_index, m_epsilon);
+                            n_n_neighbors = this->neighbors(distance_matrix, n_index, m_epsilon);
                             cluster_membership = membership(n_n_neighbors);
                             if (cluster_membership > 0 && cluster_membership < min_membership) {
                                 min_membership = cluster_membership;
