@@ -127,7 +127,6 @@ namespace density {
 
     private:
         double m_epsilon;
-        unsigned long int m_min_points;
 
         std::vector<size_t> neighbors(const std::vector<T> &data, size_t &max_index) {
             size_t sample_count = data.size();
@@ -150,11 +149,9 @@ namespace density {
         }
 
     public:
-        DBPack(const double epsilon, const unsigned long int min_points) {
+        DBPack(const double epsilon) {
             assert(epsilon > 0);
-            assert(min_points > 0);
             m_epsilon = epsilon;
-            m_min_points = min_points;
         }
         ~DBPack() {};
 
@@ -165,7 +162,7 @@ namespace density {
             int cluster_id = 0;
             while (max_index < sample_count) {
                 std::vector<size_t> point_neighbors = this->neighbors(data, max_index);
-                if (point_neighbors.size() > m_min_points) {
+                if (point_neighbors.size() > 1) {
                     for(auto it = point_neighbors.begin(); it != point_neighbors.end(); ++it) {
                         clusters.at(*it) = cluster_id;
                     }
@@ -195,7 +192,7 @@ namespace density {
             clusters.resize(total_sample_count);
             while (max_index < total_sample_count) {
                 std::vector<size_t> point_neighbors = this->neighbors(data, max_index);
-                if(point_neighbors.size() >= m_min_points) {
+                if(point_neighbors.size() > 1) {
                     for(auto it = point_neighbors.begin(); it != point_neighbors.end(); ++it) {
                         clusters.at(*it) = cluster_id;
                     }
