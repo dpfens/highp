@@ -1,3 +1,6 @@
+#ifndef MOVING_H
+#define MOVING_H
+
 #include "dbscan.cpp"
 #include <set>
 #include <map>
@@ -260,3 +263,5 @@ namespace density {
         };
     }
 }
+
+#endif /* MOVING_H */

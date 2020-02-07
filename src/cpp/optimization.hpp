@@ -1,3 +1,6 @@
+#ifndef OPTIMIZATION_H
+#define OPTIMIZATION_H
+
 #include <tuple>
 
 namespace optimization {
@@ -26,3 +29,5 @@ namespace optimization {
         return std::make_tuple(best_sum, best_start, best_end);
     }
 }
+
+#endif /* OPTIMIZATION_H */

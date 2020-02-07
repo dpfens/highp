@@ -1,3 +1,6 @@
+#ifndef RANKING_H
+#define RANKING_H
+
 #include <math.h>
 
 namespace ranking {
@@ -45,3 +48,6 @@ namespace ranking {
         return corr;
     }
 }
+
+
+#endif /* RANKING_H */

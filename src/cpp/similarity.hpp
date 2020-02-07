@@ -1,3 +1,6 @@
+#ifndef SIMILARY_H
+#define SIMILARY_H
+
 #include <set>
 #include <vector>
 #include <map>
@@ -160,3 +163,5 @@ namespace similarity {
         }
     }
 }
+
+#endif /* SIMILARY_H */

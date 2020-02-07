@@ -1,3 +1,6 @@
+#ifndef FUZZY_H
+#define FUZZY_H
+
 #include <cstdbool>
 #include <cassert>
 #include <iostream>
@@ -465,3 +468,5 @@ namespace density {
         };
     }
 }
+
+#endif /* FUZZY_H */

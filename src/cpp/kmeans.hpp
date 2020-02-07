@@ -1,3 +1,6 @@
+#ifndef KMEANS_H
+#define KMEANS_H
+
 #include <stdlib.h>
 #include <tuple>
 #include <unordered_map>
@@ -349,3 +352,5 @@ namespace clustering {
         KMode() {}
     };
 }
+
+#endif /* KMEANS_H */

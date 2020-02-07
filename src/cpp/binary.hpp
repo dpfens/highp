@@ -1,3 +1,6 @@
+#ifndef BINARY_H
+#define BINARY_H
+
 #include <math.h>
 #include <algorithm>
 
@@ -1598,3 +1601,5 @@ namespace similarity {
 
     }
 }
+
+#endif /* BINARY_H */

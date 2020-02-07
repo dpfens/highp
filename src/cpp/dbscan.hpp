@@ -1,3 +1,6 @@
+#ifndef DBSCAN_H
+#define DBSCAN_H
+
 #include <cstdbool>
 #include <cassert>
 #include <iostream>
@@ -296,3 +299,5 @@ namespace density {
     };
 
 };
+
+#endif /* DBSCAN_H */
