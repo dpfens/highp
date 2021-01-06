@@ -54,3 +54,4 @@ dkms.conf
 
 swig/*.c
 swig/*.cxx
+highp

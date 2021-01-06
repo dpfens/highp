@@ -33,6 +33,7 @@ build:
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)dbscan.i
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)moving.i
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)similarity.i
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)kmeans.i
 	python setup.py build_ext --inplace
 
 install:
@@ -43,6 +44,7 @@ install:
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)dbscan.i
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)moving.i
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)similarity.i
+	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)kmeans.i
 	python setup.py install
 
 clean:

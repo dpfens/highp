@@ -61,8 +61,6 @@ namespace density {
                     const size_t columns = data.front().size();
                     const size_t data_size = data.size();
 
-                    std::cout << "Columns: " << columns << ", Rows: " << data_size << "\n";
-
                     std::vector< std::vector<int> > assignments = std::vector< std::vector<int> >(columns);
                     std::set<int> used_clusters;
                     std::set<int> previous_unique_clusters;

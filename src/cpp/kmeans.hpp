@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <tuple>
+#include <vector>
+#include <algorithm>
 #include <unordered_map>
 
 
@@ -91,7 +93,7 @@ namespace clustering {
             }
         }
 
-        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
+        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<int> &clusters) {
             size_t centroid_count = centroids.size();
             size_t sample_count = data.size();
             size_t i = 0;
@@ -139,7 +141,7 @@ namespace clustering {
             return changes;
         }
 
-        long int update_clusters(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
+        long int update_clusters(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<int> &clusters) {
             size_t centroid_count = centroids.size();
             size_t sample_count = data.size();
             size_t i = 0;
@@ -176,10 +178,10 @@ namespace clustering {
             m_distance = distance_func;
         }
 
-        std::tuple<std::vector<std::vector<T> >, std::vector<long int> > predict(std::vector<std::vector<T> > data) {
+        std::tuple<std::vector<std::vector<T> >, std::vector<int> > predict(std::vector<std::vector<T> > &data) {
 
             size_t sample_size = data.size();
-            std::vector<long int> clusters(sample_size);
+            std::vector<int> clusters(sample_size);
             std::vector<std::vector<T> > centroids(m_k);
             long int current_iteration = 0;
             double centroid_changes = m_tolerance;
@@ -191,7 +193,7 @@ namespace clustering {
                 assignment_changes = update_clusters(data, centroids, clusters);
                 centroid_changes = update_centroids(data, centroids, clusters);
             }
-            std::tuple<std::vector<std::vector<T> >, std::vector<long int> > output = std::tie(centroids, clusters);
+            std::tuple<std::vector<std::vector<T> >, std::vector<int> > output = std::tie(centroids, clusters);
             return output;
         }
     };
@@ -238,7 +240,7 @@ namespace clustering {
             return data.at(data.size() / 2);
         }
 
-        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
+        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<int> &clusters) {
             size_t centroid_count = centroids.size();
             size_t sample_count = data.size();
             size_t dimensions = centroids.at(0).size();
@@ -278,7 +280,26 @@ namespace clustering {
     };
 
     template <typename T>
-    class KMode : public KMeans<T> {
+    class KMode: public KMeans<T> {
+    public:
+        KMode(const long int k, const long int max_iterations, const double tolerance, double (* distance_func)(std::vector<T>, std::vector<T>)): KMeans<T>(k, max_iterations, tolerance, distance_func) {
+            m_k = k;
+            m_max_iterations = max_iterations;
+            m_tolerance = tolerance;
+            m_distance = distance_func;
+        }
+
+        static double dissimilarity_func(std::vector<T> point1, std::vector<T> point2) {
+            size_t dimensions = point1.size();
+            double output = 0;
+            for (size_t i = 0; i < dimensions; ++i) {
+                if(point1.at(i) != point2.at(i)) {
+                    ++output;
+                }
+            }
+            return output;
+        }
+
     private:
         long int m_k;
         long int m_max_iterations;
@@ -329,27 +350,6 @@ namespace clustering {
             }
             return changes;
         }
-
-    public:
-        static double dissimilarity_func(std::vector<T> point1, std::vector<T> point2) {
-            size_t dimensions = point1.size();
-            size_t output = 0;
-            for (size_t i = 0; i < dimensions; ++i) {
-                if(point1.at(i) != point2.at(i)) {
-                    ++output;
-                }
-            }
-            return output;
-        }
-
-        KMode(const long int k, const long int max_iterations, const double tolerance, double (* distance_func)(std::vector<T>, std::vector<T>)=dissimilarity_func): KMeans<T>(k, max_iterations, tolerance, distance_func) {
-            m_k = k;
-            m_max_iterations = max_iterations;
-            m_tolerance = tolerance;
-            m_distance = distance_func;
-        }
-
-        KMode() {}
     };
 }
 
