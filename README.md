@@ -23,8 +23,6 @@ To build the C++, use the `make test` command:
 make test
 ```
 
-The examples of C++ usage can be found in `src/cpp/test.cpp`
-
 ### Python
 The Python bindings open a subset of the algorithms implemented in C++. The best examples for using the `python` binding are through the `test.py` module.  To build and install the Python bindings, use the `make install` command:
 
@@ -33,8 +31,13 @@ make install
 ```
 
 ### C++
-The C++ library includes implementations of dozens of algorithms:
-*  Binary similarity metrics
-*  Convoy identification
-*  Trajectory Stop detection
+C++ has broader access to more algorithmd including implementations for:
+*  Dozens of Binary attribute similarity metrics
+*  Trajectories
+  *  Convoy identification
+  *  Trajectory Stop detection
+*  Maximum Subarray
+*  KDTree
 *  etc.
+
+The examples of C++ usage can be found in `src/cpp/test.cpp`
