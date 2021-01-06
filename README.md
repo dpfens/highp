@@ -27,4 +27,4 @@ The C++ library includes implementations of dozens of algorithms:
 *  Binary similarity metrics
 *  Convoy identification
 *  Trajectory Stop detection
-*
+*  etc.
