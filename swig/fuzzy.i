@@ -18,5 +18,6 @@
 %include "../src/cpp/fuzzy.hpp"
 
  %template(FuzzyBaseDBSCAN) density::fuzzy::BaseDBSCAN<double>;
+ %template(FuzzyCoreDBSCAN) density::fuzzy::CoreDBSCAN<double>;
  %template(FuzzyBorderDBSCAN) density::fuzzy::BorderDBSCAN<double>;
  %template(FuzzyDBSCAN) density::fuzzy::DBSCAN<double>;

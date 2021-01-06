@@ -8,9 +8,17 @@ if __name__ == '__main__':
     clusters = clf.predict(data)
     for row in clusters:
         print(row)
-    clf = fuzzy.FuzzyBorderDBSCAN(2.0, 20.0, 2, distance.euclidean)
-    print('Fuzzy Clusters')
+
+    min_points = 2
+    max_points = 5
+    min_eps = 2.0
+    max_eps = 20.0
+    clf = fuzzy.CoreBorderDBSCAN(min_eps, min_points, max_points, distance.euclidean)
+    clf = fuzzy.FuzzyBorderDBSCAN(min_eps, max_eps, min_points, distance.euclidean)
+    print('Fuzzy Border Clusters')
     clusters = clf.predict(data)
     for value, row in zip(data, clusters):
         print(value, dict(row))
+
+    clf = fuzzy.FuzzyDBSCAN(min_eps, max_eps, min_points, max_points, distance.euclidean
     print('clustering complete')
