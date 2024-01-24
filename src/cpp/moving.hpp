@@ -133,6 +133,8 @@ namespace density {
                                 clusters[cluster_indices[j]] = new_cluster_id;
                             }
                         }
+                        std::cout << "test #4";
+
                         previous_unique_clusters = unique_clusters;
                         previous_clusters = clusters;
                         assignments[column] = clusters;

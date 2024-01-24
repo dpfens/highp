@@ -93,7 +93,7 @@ namespace clustering {
             }
         }
 
-        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<int> &clusters) {
+        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
             size_t centroid_count = centroids.size();
             size_t sample_count = data.size();
             size_t i = 0;
@@ -141,7 +141,7 @@ namespace clustering {
             return changes;
         }
 
-        long int update_clusters(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<int> &clusters) {
+        long int update_clusters(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
             size_t centroid_count = centroids.size();
             size_t sample_count = data.size();
             size_t i = 0;
@@ -178,10 +178,10 @@ namespace clustering {
             m_distance = distance_func;
         }
 
-        std::tuple<std::vector<std::vector<T> >, std::vector<int> > predict(std::vector<std::vector<T> > &data) {
+        std::tuple<std::vector<std::vector<T> >, std::vector<long int> > predict(std::vector<std::vector<T> > &data) {
 
             size_t sample_size = data.size();
-            std::vector<int> clusters(sample_size);
+            std::vector<long int> clusters(sample_size);
             std::vector<std::vector<T> > centroids(m_k);
             long int current_iteration = 0;
             double centroid_changes = m_tolerance;
@@ -193,7 +193,7 @@ namespace clustering {
                 assignment_changes = update_clusters(data, centroids, clusters);
                 centroid_changes = update_centroids(data, centroids, clusters);
             }
-            std::tuple<std::vector<std::vector<T> >, std::vector<int> > output = std::tie(centroids, clusters);
+            std::tuple<std::vector<std::vector<T> >, std::vector<long int> > output = std::tie(centroids, clusters);
             return output;
         }
     };
