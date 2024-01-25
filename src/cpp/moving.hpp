@@ -57,7 +57,7 @@ namespace density {
                 }
                 virtual ~MovingDBSCAN() {};
 
-                std::vector<std::vector<int> > predict(const std::vector< std::vector<std::vector<T> > > &data) {
+                std::vector<std::vector<int> > predict(const std::vector<std::vector<std::vector<T> > > &data) {
                     const size_t columns = data.front().size();
                     const size_t data_size = data.size();
 
@@ -85,6 +85,7 @@ namespace density {
                             continue;
                         }
 
+                        std::set<int> current_unique_clusters = unique_clusters;
                         for (const int &cluster: unique_clusters) {
                             std::vector<size_t> cluster_indices;
                             for (size_t j = 0; j < data_size; ++j) {
@@ -93,6 +94,7 @@ namespace density {
                                 }
                             }
 
+                            // calculate similarity between cluster and previous clusters
                             std::map <int, double> similarities;
                             for (const int &previous_cluster: previous_unique_clusters) {
                                 std::vector<size_t> previous_cluster_indices;
@@ -105,9 +107,11 @@ namespace density {
                                 similarities[previous_cluster] = jaccard_similarity;
                             }
 
+                            // get most previous cluster most similar to given cluster
                             int new_cluster_id;
                             if (similarities.size() > 0) {
                                 int most_similar_cluster;
+                                // get most similar cluster
                                 double most_similar_value = 0.0;
                                 for(auto it = similarities.cbegin(); it != similarities.cend(); ++it ) {
                                     if (it ->second > most_similar_value) {
@@ -115,27 +119,30 @@ namespace density {
                                         most_similar_value = it->second;
                                     }
                                 }
+
+                                // if exceeds minimum threshold, set cluster id to that one
                                 if (most_similar_value >= m_theta) {
                                     new_cluster_id = most_similar_cluster;
                                 } else {
+                                    // other set as new cluster id
                                     new_cluster_id = used_clusters.size();
                                     used_clusters.insert(new_cluster_id);
                                 }
                             } else {
+                                // create a new cluster with new id
                                 new_cluster_id = used_clusters.size();
                                 used_clusters.insert(new_cluster_id);
                             }
-                            // get most similar cluster, to check if the cluster needs to be merged
-                            unique_clusters.erase(cluster);
-                            unique_clusters.insert(new_cluster_id);
+
+                            current_unique_clusters.erase(current_unique_clusters.find(cluster));
+                            current_unique_clusters.insert(new_cluster_id);
 
                             for (size_t j = 0; j < cluster_indices.size(); ++j) {
                                 clusters[cluster_indices[j]] = new_cluster_id;
                             }
                         }
-                        std::cout << "test #4";
 
-                        previous_unique_clusters = unique_clusters;
+                        previous_unique_clusters = current_unique_clusters;
                         previous_clusters = clusters;
                         assignments[column] = clusters;
                     }

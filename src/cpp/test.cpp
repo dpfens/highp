@@ -212,12 +212,12 @@ int main() {
     density::DBSCAN<double> db_clf = density::DBSCAN<double>(epsilon, min_points, distance::euclidean<double>);
     density::moving::MovingDBSCAN<double> moving_clf = density::moving::MovingDBSCAN<double>(db_clf, 0.5);
     std::vector<std::vector<int> > results = moving_clf.predict(sequential_data);
-    /*for (size_t i = 0; i < results.size(); i++) {
+    for (size_t i = 0; i < results.size(); i++) {
         std::cout << "\n Row #" << i << ": ";
         for (size_t j = 0; j < results[i].size(); j++) {
             std::cout << results[i][j] << "(" << sequential_data[i][j][0] << "), ";
         }
-    }*/
+    }
     unsigned int k = 4;
     unsigned int m = 5;
     density::moving::CMC<double> convoy_clf = density::moving::CMC<double>(db_clf, k, m);
