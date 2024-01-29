@@ -247,7 +247,7 @@ int main() {
     clustering::KMode<long int> kmode_clf = clustering::KMode<long int>(kmeans_k, max_iterations, tolerance, distance::euclidean<long int>);
 
     density::fuzzy::BorderDBPack<double, long int> pack_clf = density::fuzzy::BorderDBPack<double, long int>(2.0, 7.0, 2);
-    std::vector<std::map<long int, double> > pack_clusters =  pack_clf.predict(single_data);
+    std::vector<std::map<long int, double> > pack_clusters = pack_clf.predict(single_data);
     for (auto i = pack_clusters.begin(); i != pack_clusters.end(); ++i) {
         size_t index = std::distance(pack_clusters.begin(), i);
         std::cout << "Index: " << index << ", Point: " << single_data.at(index) << "    ";
