@@ -47,5 +47,8 @@ install:
 	swig -c++ -python -outdir $(PYTHONLIB) $(SWIG)kmeans.i
 	python setup.py install
 
+wasm:
+	emcc -std=c++11 -lembind -o $(BIN)highp.js $(SRC_CPP)webassembly.cpp -s WASM=1 -s EXPORT_NAME="HighP"
+
 clean:
 	rm -rf build dist bin swig/*.cxx $(PYTHONLIB)

@@ -178,6 +178,30 @@ namespace clustering {
             m_distance = distance_func;
         }
 
+        void setK(const long int k) {
+            this->m_k = k;
+        }
+
+        long int getK() {
+            return this->m_k;
+        }
+
+        void setMaxIterations(const long int maxIterations) {
+            this->m_max_iterations = maxIterations;
+        }
+
+        long int getMaxIterations() {
+            return this->m_max_iterations;
+        }
+
+        void setTolerance(const double tolerance) {
+            this->m_tolerance = tolerance;
+        }
+
+        double getTolerance() {
+            return this->m_tolerance;
+        }
+
         std::tuple<std::vector<std::vector<T> >, std::vector<long int> > predict(std::vector<std::vector<T> > &data) {
 
             size_t sample_size = data.size();
