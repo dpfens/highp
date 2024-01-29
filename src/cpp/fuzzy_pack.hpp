@@ -19,7 +19,6 @@ namespace density {
             T1 m_min_eps;
             T2 m_min_points;
 
-
         protected:
             virtual std::vector<size_t> neighbors(const std::vector<T1> &data, size_t index, const T1 &epsilon) {
                 std::vector<size_t> output;
@@ -78,21 +77,21 @@ namespace density {
                 return (neighbor_count - m_min_points) / difference;
             }
 
-            void expand_cluster(const std::vector<T1> &data, size_t &max_index, std::vector<T1> neighbors, std::vector<std::map<T2, T1> > &clusters, const T2 cluster) {
-                clusters.at(max_index) = this->core_membership(neighbors.size());
+            void expand_cluster(const std::vector<T1> &data, size_t &max_index, std::vector<size_t> neighbors, std::vector<std::map<T2, T1> > &clusters, const T2 cluster) {
+                clusters.at(max_index)[cluster] = this->core_membership(neighbors.size());
                 const size_t sample_count = data.size();
                 ++max_index;
                 while (max_index < sample_count) {
                     if(std::find(neighbors.begin(), neighbors.end(), max_index) == neighbors.end()) {
                         break;
                     }
-                    std::vector<size_t> n_neighbors = this->neighbors(data, max_index);
+                    std::vector<size_t> n_neighbors = this->neighbors(data, max_index, this->m_min_eps);
                     if (n_neighbors.size() > m_min_points) {
                         clusters.at(max_index)[cluster] = this->core_membership(n_neighbors.size());
                     } else {
                         T1 min_membership = 1.0;
                         for (size_t i = 0; i < n_neighbors.size(); ++i) {
-                            std::vector<size_t> n_n_neighbors = this->neighbors(data, neighbors[i]);
+                            std::vector<size_t> n_n_neighbors = this->neighbors(data, neighbors[i], this->m_min_eps);
                             T1 membership = this->core_membership(n_n_neighbors.size());
                             if (membership > 0.0 && membership < min_membership) {
                                 min_membership = membership;
