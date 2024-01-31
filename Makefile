@@ -48,7 +48,7 @@ install:
 	python setup.py install
 
 wasm:
-	emcc -std=c++11 -lembind -o $(BIN)highp.js $(SRC_CPP)webassembly.cpp -s WASM=1 -s EXPORT_NAME="HighP"
+	emcc -std=c++11 -lembind -o $(BIN)highp.js $(SRC_CPP)webassembly.cpp -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME="'HIGHP'"
 
 clean:
 	rm -rf build dist bin swig/*.cxx $(PYTHONLIB)

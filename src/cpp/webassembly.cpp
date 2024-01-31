@@ -1,13 +1,25 @@
+#include <vector>
+#include <emscripten/val.h>
 #include <emscripten/bind.h>
 #include "kmeans.cpp"
 #include "dbscan.cpp"
 #include "fuzzy_pack.cpp"
+#include "distance.cpp"
 
 using namespace emscripten;
 using namespace clustering;
 using namespace density;
 
+
+
+
 EMSCRIPTEN_BINDINGS(highp) {
+    function("JsArrayToVectorDouble", &emscripten::vecFromJSArray<double>);
+    function("JsArrayToVectorInt", &emscripten::vecFromJSArray<int>);
+    function("JsArrayToVectorString", &emscripten::vecFromJSArray<std::string>);
+
+    value_object<std::vector<double>>("VectorDouble");
+
     class_<KMeans<double>>("KMeans")
         .constructor<int, int, double, double (*)(std::vector<double>, std::vector<double>)>()
         .function("setK", &KMeans<double>::setK)
@@ -62,6 +74,9 @@ EMSCRIPTEN_BINDINGS(highp) {
     class_<fuzzy::BorderDBPack<double, long int>>("BorderDBPack")
         .constructor<double, double, long int>()
         .function("predict", &fuzzy::BorderDBPack<double, long int>::predict);
+
+    function("sad", &distance::sad<double>);
+    function("euclidean", &distance::euclidean<double>);
 }
 
 int main() {
