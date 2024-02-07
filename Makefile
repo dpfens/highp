@@ -2,6 +2,8 @@ CC=gcc
 CCFLAGS = -Wall -fopenmp -g -O2
 CPP=g++
 CPPFLAGS = -Wall -fopenmp -g -O2 -std=c++11
+WASM=em++
+WASMFLAGS = -std=c++11 -O2 -lembind -s WASM=1 -sNO_DISABLE_EXCEPTION_CATCHING -s MODULARIZE=1 -s EXPORT_NAME="'HIGHP'"
 SWIG=./swig/
 SRC=./src/
 SRC_C=$(SRC)c/
@@ -48,7 +50,7 @@ install:
 	python setup.py install
 
 wasm:
-	emcc -std=c++11 -lembind -o $(BIN)highp.js $(SRC_CPP)webassembly.cpp -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME="'HIGHP'"
+	$(WASM) $(WASMFLAGS) -o $(BIN)highp.js $(SRC_CPP)/wasm/bindings.cpp
 
 clean:
 	rm -rf build dist bin swig/*.cxx $(PYTHONLIB)

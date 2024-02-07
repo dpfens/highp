@@ -5,14 +5,51 @@
             var highP = new HIGHP();
 
             highP.then(function (v) {
+                var retVector = v.returnVectorData();
 
-                const point1 = [1.0, 2.0, 3.0];
-                const point2 = [4.0, 5.0, 6.0];
+                // vector size
+                var vectorSize = retVector.size();
+                console.log(vectorSize);
+                console.log(retVector);
+
+
+                // reset vector value
+                retVector.set(vectorSize - 1, 11);
+
+                // push value into vector
+                retVector.push_back(12);
+
+                // retrieve value from the vector
+                for (var i = 0; i < retVector.size(); i++) {
+                    console.log("Vector Value: ", retVector.get(i));
+                }
+
+
+                console.log(v);
+
+                const point1 = [1.1, 2.4, 3.9];
+                const point2 = [4.2, 5.4, 6.5];
+                const point3 = [3.3, 3.7, 3.2];
+                const point4 = [77.4, 5.2, 5.1];
 
                 // Call the euclidean function from JavaScript
-                const distance = v.sad(point1, point2);
+                console.log(v.JsArrayToVectorDouble(point1));
+                const distance = v.euclidean(v.JsArrayToVectorDouble(point1), v.JsArrayToVectorDouble(point2));
                 console.log("Euclidean distance:", distance);
-                var kmeansClf = new v.KMeans(5, 30, 0.1, v.sad);
+
+                var rawData = [point1, point2, point3, point4],
+                    processedData = new v.VectorMatrixDouble();
+                for (var i = 0; i < rawData.length; i++) {
+                    processedData.push_back(v.JsArrayToVectorDouble(rawData[i]));
+                }
+
+                var kmeansClf = new v.KMeans(3, 2, 0.1, "euclidean");
+                console.log('K: ' + kmeansClf.getK() + ', Tolerance: ' + kmeansClf.getTolerance());
+                console.log('Distance: ' + kmeansClf.getDistance());
+                var results = kmeansClf.predict(processedData);
+                console.log(results);
+
+
             });
         </script>
     </head>
