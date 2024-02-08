@@ -1,8 +1,11 @@
+#ifndef WASM_UTILITY_H
+#define WASM_UTILITY_H
+
 #include <emscripten/val.h>
 
-namespace Wasm {
+namespace wasm {
 
-    namespace Utility {
+    namespace utility {
 
         template <typename T>
         emscripten::val vecToArray(const std::vector<T>& data) {
@@ -34,3 +37,5 @@ namespace Wasm {
 
     }
 }
+
+#endif /* WASM_UTILITY_H */
