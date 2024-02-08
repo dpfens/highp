@@ -99,13 +99,13 @@ namespace clustering {
             size_t i = 0;
             size_t dimensions = data.at(0).size();
 
-            std::vector<std::vector<size_t> > sums(centroid_count);
+            std::vector<std::vector<T> > sums(centroid_count);
             std::vector<std::vector<size_t> > counts(centroid_count);
             std::vector<std::vector<T> > new_centroids(centroid_count);
 
             for (i = 0; i < centroid_count; ++i) {
                 new_centroids.at(i) = std::vector<T>(dimensions);
-                sums.at(i) = std::vector<size_t>(dimensions);
+                sums.at(i) = std::vector<T>(dimensions);
                 counts.at(i) = std::vector<size_t>(dimensions);
             }
 
@@ -123,9 +123,9 @@ namespace clustering {
             #pragma omp parallel for private(i) shared(centroids)
             for (i = 0; i < centroid_count; ++i) {
                 for (size_t j = 0; j < dimensions; ++j) {
-                    size_t sum = sums.at(i).at(j);
+                    T sum = sums.at(i).at(j);
                     size_t count = counts.at(i).at(j);
-                    new_centroids.at(i).at(j) = sum / count;
+                    new_centroids.at(i).at(j) = sum / (T)count;
                 }
             }
 
