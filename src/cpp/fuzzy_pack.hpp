@@ -51,6 +51,22 @@ namespace density {
 
             virtual ~BaseDBPack() {};
 
+            void setMinEpsilon(const T1 epsilon) {
+                this->m_min_eps = epsilon;
+            }
+
+            T1 getMinEpsilon() {
+                return this->m_min_eps;
+            }
+
+            void setMinPoints (const T2 minPoints) {
+                this->m_min_points = minPoints;
+            }
+
+            T2 getMinPoints () {
+                return this->m_min_points;
+            }
+
             std::vector<std::map<T2, T1> > predict(const std::vector<T1> data) {
                 const std::size_t sample_count = data.size();
                 std::vector<std::map<T2, T1> > clusters(sample_count);
@@ -113,6 +129,14 @@ namespace density {
                 m_max_points = max_points;
             }
             ~CoreDBPack() {};
+
+            void setMaxPoints (const T2 maxPoints) {
+                this->m_max_points = maxPoints;
+            }
+
+            T2 getMaxPoints () {
+                return this->m_max_points;
+            }
 
             std::vector<std::map<T2, T1> > predict(const std::vector<T1> data) {
                 const std::size_t sample_count = data.size();
@@ -204,6 +228,14 @@ namespace density {
                 m_min_points = min_points;
             }
             ~BorderDBPack() {};
+
+            void setMaxEpsilon(const T1 epsilon) {
+                this->m_max_eps = epsilon;
+            }
+
+            T1 getMaxEpsilon() {
+                return this->m_max_eps;
+            }
 
             std::vector<std::map<T2, T1> > predict(std::vector<T1> data) {
                 const std::size_t sample_count = data.size();
