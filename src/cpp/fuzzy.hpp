@@ -43,7 +43,7 @@ namespace density {
 
             virtual std::vector<size_t> neighbors(const std::vector<std::vector<T> > &distance_matrix, const size_t index, const double &epsilon) {
                 std::vector<size_t> output;
-                std::vector<double> row = distance_matrix.at(index);
+                std::vector<T> row = distance_matrix.at(index);
                 for(auto it = row.begin(); it != row.end(); ++it) {
                     size_t index = std::distance(row.begin(), it);
                     if (*it < epsilon) {
@@ -286,7 +286,7 @@ namespace density {
             }
 
         public:
-            BorderDBSCAN(const double min_epsilon, double max_epsilon, const unsigned long int min_points, double (* distance_func)(std::vector<T>, std::vector<T>)): BaseDBSCAN<T>(min_points, distance_func) {
+            BorderDBSCAN(const double min_epsilon, const double max_epsilon, const unsigned long int min_points, double (* distance_func)(std::vector<T>, std::vector<T>)): BaseDBSCAN<T>(min_points, distance_func) {
                 assert(min_epsilon > 0);
                 assert(max_epsilon >= min_epsilon);
                 assert(min_points > 0);
@@ -296,7 +296,7 @@ namespace density {
                 m_distance = distance_func;
             }
             ~BorderDBSCAN() {};
-
+            
             std::vector<std::map<int, double> > predict(const std::vector<std::vector<T> > &data) {
                 const std::size_t sample_count = data.size();
                 std::vector<std::map<int, double> > clusters(sample_count);
@@ -418,7 +418,7 @@ namespace density {
             double (* m_distance)(std::vector<T>, std::vector<T>);
 
         public:
-            DBSCAN(const double min_epsilon, double max_epsilon, const unsigned long int min_points, const unsigned long int max_points, double (* distance_func)(std::vector<T>, std::vector<T>)): BaseDBSCAN<T>(min_points, distance_func) {
+            DBSCAN(const double min_epsilon, const double max_epsilon, const unsigned long int min_points, const unsigned long int max_points, double (* distance_func)(std::vector<T>, std::vector<T>)): BaseDBSCAN<T>(min_points, distance_func) {
                 assert(min_epsilon > 0);
                 assert(max_epsilon >= min_epsilon);
                 assert(min_points > 0);

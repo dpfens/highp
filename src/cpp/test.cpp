@@ -175,26 +175,26 @@ int main() {
     unsigned long int max_points = 4;
     density::fuzzy::CoreDBSCAN<double> clf = density::fuzzy::CoreDBSCAN<double>(epsilon, min_points, max_points, distance::euclidean);
     std::vector<std::map<int, double> > clusters = clf.predict(data);
-    /*long double min_epsilon = 2.1;
+    long double min_epsilon = 2.1;
     long double max_epsilon = 6;
-    unsigned long int min_points = 1;
-    density::fuzzy::BorderDBSCAN<long double> clf = density::fuzzy::BorderDBSCAN<long double>(min_epsilon, max_epsilon, min_points, euclidean);
-    std::vector<std::unordered_map<int, long double> > clusters = clf.predict(other_data);
+    min_points = 1;
+    density::fuzzy::BorderDBSCAN<double> border_clf = density::fuzzy::BorderDBSCAN<double>(min_epsilon, max_epsilon, min_points, distance::euclidean);
+    std::vector<std::map<int, double> > border_clusters = border_clf.predict(data);
     for (auto i = clusters.begin(); i != clusters.end(); ++i) {
-        size_t index = std:vg:distance(clusters.begin(), i);
+        size_t index = std::distance(clusters.begin(), i);
         std::cout << "Index: " << index << ", Point: " << other_data.at(index).at(0) << "    ";
         print_map(*i);
         std::cout << '\n';
-    }*/
+    }
 
-    /*density::DBPack2<double> dbpack2 = density::DBPack2<double>(5.0, 3);
-    std::vector<int> single_clusters = dbpack2.predict(single_data);
+    density::DBPack<double> dbpack = density::DBPack<double>(5.0, 3);
+    std::vector<int> single_clusters = dbpack.predict(single_data);
     for (size_t i = 0; i < single_clusters.size(); ++i) {
         std::cout << "Single Clusters: Row #" << i << " - "  << single_data.at(i) << " : Cluster #" << single_clusters.at(i) << std::endl;
     }
 
-    long double min_epsilon = 1;
-    long double max_epsilon = 10;
+    min_epsilon = 1;
+    max_epsilon = 10;
     min_points = 2;
     max_points = 4;
     density::fuzzy::DBSCAN<double> fuzzy_clf = density::fuzzy::DBSCAN<double>(min_epsilon, max_epsilon, min_points, max_points, distance::euclidean<double>);
@@ -228,7 +228,7 @@ int main() {
     for (size_t i = 0; i < start_times.size(); ++i) {
         print_vector<size_t>(convoy_indices[i]);
         std::cout << "Start: " << start_times[i] << ", End: " << end_times[i] << "\n";
-    }*/
+    }
 
     long int kmeans_k = 5;
     long int max_iterations = 100;
@@ -238,7 +238,7 @@ int main() {
     clustering::KMeans<double> kmeans_clf = clustering::KMeans<double>(kmeans_k, max_iterations, tolerance, distance::euclidean<double>);
     std::tie(centroids, kmeans_clusters) = kmeans_clf.predict(other_data);
 
-    std::cout << "Centroids\n";
+    std::cout << "\n";
     for (auto i = centroids.begin(); i != centroids.end(); ++i) {
         print_vector(*i);
         std::cout << 'Centroid \n';
@@ -246,7 +246,7 @@ int main() {
 
     print_vector(kmeans_clusters);
 
-    /*std::vector<long int> kmedian_clusters;
+    std::vector<long int> kmedian_clusters;
     clustering::KMedian<double> kmedian_clf = clustering::KMedian<double>(kmeans_k, max_iterations, tolerance, distance::euclidean<double>);
     std::tie(centroids, kmedian_clusters) = kmedian_clf.predict(other_data);
     print_vector(kmedian_clusters);
@@ -260,7 +260,7 @@ int main() {
         std::cout << "Index: " << index << ", Point: " << single_data.at(index) << "    ";
         print_map(*i);
         std::cout << '\n';
-    }*/
+    }
 
     return 0;
 }
