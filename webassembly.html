@@ -24,7 +24,6 @@
                     console.log("Vector Value: ", retVector.get(i));
                 }
 
-
                 console.log(v);
 
                 const point1 = [1.1, 2.4, 3.9];
@@ -33,23 +32,22 @@
                 const point4 = [77.4, 5.2, 5.1];
 
                 // Call the euclidean function from JavaScript
-                console.log(v.JsArrayToVectorDouble(point1));
                 const distance = v.euclidean(v.JsArrayToVectorDouble(point1), v.JsArrayToVectorDouble(point2));
                 console.log("Euclidean distance:", distance);
 
-                var rawData = [point1, point2, point3, point4],
-                    processedData = new v.VectorMatrixDouble();
-                for (var i = 0; i < rawData.length; i++) {
-                    processedData.push_back(v.JsArrayToVectorDouble(rawData[i]));
-                }
-
+                // KMeans clustering from WebAssembly
+                var rawData = [point1, point2, point3, point4];
                 var kmeansClf = new v.KMeans(3, 2, 0.1, "euclidean");
                 console.log('K: ' + kmeansClf.getK() + ', Tolerance: ' + kmeansClf.getTolerance());
                 console.log('Distance: ' + kmeansClf.getDistance());
-                var results = kmeansClf.predict(processedData);
+                var results = kmeansClf.predict(rawData);
                 console.log(results);
 
-
+                // BorderDBPack clustering
+                var rawSingleData = [7344.0, 7380.0, 7392.0, 7451.0, 7466.0, 7478.0, 7493.0, 7499.0, 7499.0, 7510.0, 7543.0, 7563.0, 7569.0, 7569.0, 7580.0, 7591.0, 7609.0, 7620.0, 7623.0, 7631.0, 7638.0, 7645.0, 7663.0, 7665.0, 7667.0, 7686.0, 7691.0, 7701.0, 7701.0, 7702.0, 7735.0, 7750.0, 7755.0, 7760.0, 7777.0, 7790.0, 7796.0, 7797.0, 7805.0, 7809.0, 7811.0, 7814.0, 7819.0, 7820.0, 7821.0, 7828.0, 7833.0, 7849.0, 7853.0, 7853.0, 7862.0, 7874.0, 7877.0, 7878.0, 7880.0, 7886.0, 7891.0, 7894.0, 7896.0, 7897.0, 7899.0, 7900.0, 7904.0, 7929.0, 7945.0, 7953.0, 7958.0, 7961.0, 7963.0, 7964.0, 7970.0, 7978.0, 7998.0, 7998.0, 7999.0, 8021.0, 8021.0, 8025.0, 8033.0, 8056.0, 8062.0, 8063.0, 8070.0, 8074.0, 8110.0, 8113.0, 8118.0, 8119.0, 8125.0, 8137.0, 8151.0, 8151.0, 8152.0, 8169.0, 8192.0, 8214.0, 8237.0, 8249.0, 8268.0, 8275.0, 8278.0, 8284.0, 8285.0, 8303.0, 8304.0, 8308.0, 8322.0, 8345.0, 8352.0, 8361.0, 8365.0, 8370.0, 8380.0, 8383.0, 8394.0, 8416.0, 8445.0, 8454.0, 8457.0, 8490.0, 8506.0, 8512.0, 8520.0, 8533.0, 8540.0, 8545.0, 8563.0, 8569.0, 8590.0, 8611.0, 8810.0, 8834.0, 8850.0, 8858.0, 8882.0, 8895.0, 8896.0, 8904.0, 9148.0, 9347.0, 9419.0];
+                var packClf = new v.BorderDBPack(2.0, 5.0, 3);
+                results = packClf.predict(rawSingleData);
+                console.log(results);
             });
         </script>
     </head>

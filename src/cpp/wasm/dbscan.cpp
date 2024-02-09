@@ -15,7 +15,7 @@ namespace wasm {
 
         template <typename T>
         class DBSCAN {
-                        public:
+            public:
                 DBSCAN(const double epsilon, const long int min_points, const std::string distanceFunc) {
                     if (distanceFunc != "euclidean"){
                         throw std::invalid_argument(distanceFunc + " is not a valid distance metric");
@@ -25,7 +25,8 @@ namespace wasm {
                     m_instance = new density::DBSCAN<T>(epsilon, min_points, m_distance);
                 }
 
-                emscripten::val predict(std::vector<std::vector<T> > &data) {
+                emscripten::val predict(emscripten::val jsData) {
+                    std::vector<std::vector<T>> data = wasm::utility::array2DToVec<T>(jsData);
                     auto clusters = this->m_instance->predict(data);
                     return wasm::utility::vecToArray<int>(clusters);
                 }
@@ -62,7 +63,8 @@ namespace wasm {
                     m_instance = new density::DBPack<T>(epsilon, min_points);
                 }
 
-                emscripten::val predict(std::vector<std::vector<T> > &data) {
+                emscripten::val predict(emscripten::val jsData) {
+                    std::vector<std::vector<T>> data = wasm::utility::array2DToVec<T>(jsData);
                     auto clusters = this->m_instance->predict(data);
                     return wasm::utility::vecToArray<int>(clusters);
                 }

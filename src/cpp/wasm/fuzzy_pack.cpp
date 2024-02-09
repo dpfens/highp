@@ -22,9 +22,17 @@ namespace wasm {
                         m_instance = new density::fuzzy::CoreDBPack<T1, T2>(min_epsilon, min_points, max_points);
                     }
 
-                    emscripten::val predict(std::vector<T1> &data) {
-                        auto clusters = this->m_instance->predict(data);
-                        return wasm::utility::vecToArray<std::map<T2, T1>>(clusters);
+                    emscripten::val predict(emscripten::val jsData) {
+                        std::vector<T1> data = wasm::utility::arrayToVec<T1>(jsData);
+                        auto fuzzyClusterSet = this->m_instance->predict(data);
+
+                        // convert maps to JS Objects
+                        emscripten::val jsClusters = emscripten::val::array();
+                        for (auto & fuzzyClusters : fuzzyClusterSet) {
+                            jsClusters.call<void>("push", wasm::utility::mapToObject<T2, T1>(fuzzyClusters));
+                        }
+
+                        return jsClusters;
                     }
 
                     void setMinEpsilon(const T1 value) {
@@ -62,9 +70,17 @@ namespace wasm {
                         m_instance = new density::fuzzy::BorderDBPack<T1, T2>(min_epsilon, max_epsilon, min_points);
                     }
 
-                    emscripten::val predict(std::vector<T1> &data) {
-                        auto clusters = this->m_instance->predict(data);
-                        return wasm::utility::vecToArray<std::map<T2, T1>>(clusters);
+                    emscripten::val predict(emscripten::val jsData) {
+                        std::vector<T1> data = wasm::utility::arrayToVec<T1>(jsData);
+                        auto fuzzyClusterSet = this->m_instance->predict(data);
+
+                        // convert maps to JS Objects
+                        emscripten::val jsClusters = emscripten::val::array();
+                        for (auto & fuzzyClusters : fuzzyClusterSet) {
+                            jsClusters.call<void>("push", wasm::utility::mapToObject<T2, T1>(fuzzyClusters));
+                        }
+
+                        return jsClusters;
                     }
 
                     void setMinEpsilon(const T1 value) {

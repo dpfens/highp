@@ -175,14 +175,14 @@ int main() {
     unsigned long int max_points = 4;
     density::fuzzy::CoreDBSCAN<double> clf = density::fuzzy::CoreDBSCAN<double>(epsilon, min_points, max_points, distance::euclidean);
     std::vector<std::map<int, double> > clusters = clf.predict(data);
-    long double min_epsilon = 2.1;
-    long double max_epsilon = 6;
+    long double min_epsilon = 2.0;
+    long double max_epsilon = 5.0;
     min_points = 1;
     density::fuzzy::BorderDBSCAN<double> border_clf = density::fuzzy::BorderDBSCAN<double>(min_epsilon, max_epsilon, min_points, distance::euclidean);
     std::vector<std::map<int, double> > border_clusters = border_clf.predict(data);
     for (auto i = clusters.begin(); i != clusters.end(); ++i) {
         size_t index = std::distance(clusters.begin(), i);
-        std::cout << "Index: " << index << ", Point: " << other_data.at(index).at(0) << "    ";
+        std::cout << "Border Index: " << index << ", Point: " << other_data.at(index).at(0) << "    ";
         print_map(*i);
         std::cout << '\n';
     }
@@ -253,11 +253,11 @@ int main() {
 
     clustering::KMode<long int> kmode_clf = clustering::KMode<long int>(kmeans_k, max_iterations, tolerance, distance::euclidean<long int>);
 
-    density::fuzzy::BorderDBPack<double, long int> pack_clf = density::fuzzy::BorderDBPack<double, long int>(2.0, 7.0, 2);
+    density::fuzzy::BorderDBPack<double, long int> pack_clf = density::fuzzy::BorderDBPack<double, long int>(2.0, 5.0, 3);
     std::vector<std::map<long int, double> > pack_clusters = pack_clf.predict(single_data);
     for (auto i = pack_clusters.begin(); i != pack_clusters.end(); ++i) {
         size_t index = std::distance(pack_clusters.begin(), i);
-        std::cout << "Index: " << index << ", Point: " << single_data.at(index) << "    ";
+        std::cout << "Border DBPack Index: " << index << ", Point: " << single_data.at(index) << "    ";
         print_map(*i);
         std::cout << '\n';
     }

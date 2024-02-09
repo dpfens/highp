@@ -182,9 +182,11 @@ namespace density {
                 clusters.at(max_index)[cluster] = 1.0;
                 ++max_index;
                 for (size_t i = max_index; i < sample_count; ++i) {
+                    // if not a core neighbor of the previous point, stop
                     if(std::find(neighbors.begin(), neighbors.end(), i) == neighbors.end()) {
                         break;
                     }
+                    // if does not have the minimum number of neighbors to be a core point, stop
                     std::vector<size_t> n_neighbors = this->neighbors(data, i, m_min_eps);
                     if (n_neighbors.size() < m_min_points) {
                         break;
@@ -198,7 +200,7 @@ namespace density {
             void expand_border_forward(const std::vector<T1> &data, size_t core_index, std::vector<std::map<T2, T1> > &clusters, const T2 cluster) {
                 const size_t sample_count = data.size();
                 const T1 core_point = data.at(core_index);
-                for (size_t i = core_index + 1; i < sample_count; ++i) {
+                for (size_t i = core_index; i < sample_count; ++i) {
                     T1 distance = abs(core_point - data.at(i));
                     if (distance >= m_max_eps) {
                         break;
@@ -242,9 +244,10 @@ namespace density {
                 std::vector<std::map<T2, T1> > clusters(sample_count);
                 T2 cluster = 0;
                 size_t max_index = 0;
-                while (max_index < sample_count) {
+                while (max_index < sample_count) {\
                     std::vector<size_t> neighbors = this->neighbors(data, max_index, m_min_eps);
                     if (neighbors.size() >= m_min_points) {
+
                         this->expand_border_backward(data, max_index, clusters, cluster);
                         this->expand_cluster(data, max_index, neighbors, clusters, cluster);
                         this->expand_border_forward(data, max_index, clusters, cluster);

@@ -47,6 +47,28 @@ EMSCRIPTEN_BINDINGS(highp) {
         .function("getDistance", &wasm::cluster::KMeans<double>::getDistanceFunc)
         .function("predict", &wasm::cluster::KMeans<double>::predict);
     
+    class_<wasm::cluster::KMedian<double>>("KMedian")
+        .constructor<int, int, double, std::string>()
+        .function("setK", &wasm::cluster::KMedian<double>::setK)
+        .function("getK", &wasm::cluster::KMedian<double>::getK)
+        .function("setMaxIterations", &wasm::cluster::KMedian<double>::setMaxIterations)
+        .function("getMaxIterations", &wasm::cluster::KMedian<double>::getMaxIterations)
+        .function("setTolerance", &wasm::cluster::KMedian<double>::setTolerance)
+        .function("getTolerance", &wasm::cluster::KMedian<double>::getTolerance)
+        .function("getDistance", &wasm::cluster::KMedian<double>::getDistanceFunc)
+        .function("predict", &wasm::cluster::KMedian<double>::predict);
+
+    class_<wasm::cluster::KMode<double>>("KMode")
+        .constructor<int, int, double, std::string>()
+        .function("setK", &wasm::cluster::KMode<double>::setK)
+        .function("getK", &wasm::cluster::KMode<double>::getK)
+        .function("setMaxIterations", &wasm::cluster::KMode<double>::setMaxIterations)
+        .function("getMaxIterations", &wasm::cluster::KMode<double>::getMaxIterations)
+        .function("setTolerance", &wasm::cluster::KMode<double>::setTolerance)
+        .function("getTolerance", &wasm::cluster::KMode<double>::getTolerance)
+        .function("getDistance", &wasm::cluster::KMode<double>::getDistanceFunc)
+        .function("predict", &wasm::cluster::KMode<double>::predict);
+    
     class_<wasm::cluster::DBSCAN<double>>("DBSCAN")
         .constructor<double, long int, std::string>()
         .function("setEpsilon", &wasm::cluster::DBSCAN<double>::setEpsilon)
