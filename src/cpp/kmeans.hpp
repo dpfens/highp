@@ -154,11 +154,11 @@ namespace clustering {
 
                 double distance = 0.0;
                 long int closest_centroid = 0;
-                double closest_centroid_distance = 9999999;
+                double closest_centroid_distance = std::numeric_limits<double>::max();
                 for (i = 0; i < dataPoints; ++i) {
                     T* sample = &data[i * m_dimensions];
                     closest_centroid = 0;
-                    closest_centroid_distance = 9999999;
+                    closest_centroid_distance = std::numeric_limits<double>::max();
                     for (size_t j = 0; j < m_k; ++j) {
                         T* centroid = &centroids[j * m_dimensions];
                         distance = this->m_distance(sample, centroid, m_dimensions);
@@ -231,6 +231,7 @@ namespace clustering {
                     //emscripten_console_log(("Assignment changes: " + std::to_string(assignment_changes)).c_str());
                     centroid_changes = update_centroids(data, length, centroids, clusters);
                 }
+                printf("Current iteration: %zu, centroid changes: %f\n", current_iteration, centroid_changes);
                 std::tuple<T *, long int *> output = std::tie(centroids, clusters);
                 return output;
             }

@@ -57,5 +57,8 @@ wasm_test:
 wasm_prod:
 	$(WASM) $(WASMFLAGS) $(WASMOPTFLAGS) -o $(BIN)highp.js $(SRC_CPP)/wasm/bindings.cpp
 
+wasm_simd:
+	$(WASM) $(WASMFLAGS) $(WASMOPTFLAGS) -msimd128 -o $(BIN)highp.js $(SRC_CPP)/wasm/bindings.cpp
+
 clean:
 	rm -rf build dist bin swig/*.cxx $(PYTHONLIB)

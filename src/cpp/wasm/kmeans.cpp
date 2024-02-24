@@ -5,6 +5,7 @@
 #include <emscripten/val.h>
 #include "../kmeans.cpp"
 #include "../distance.hpp"
+#include <wasm_simd128.h>
 
 #include "utility.hpp"
 
@@ -21,9 +22,37 @@ namespace wasm {
         double ssd(T* point1, T* point2, long int dimensions) {
             // Sum of Squared Difference (SSD)
             T distance = 0.0;
-            for (std::size_t i = 0; i < dimensions; i++){
-                distance += pow(point2[i] - point1[i], 2);
-            }
+
+            #ifdef __wasm_simd128__
+                v128_t sum = wasm_f64x2_splat(0.0f);
+
+                // Calculate SSD in blocks for better performance
+                const int SIMD_BLOCK_SIZE = 2;
+
+                long int i = 0;
+                for (; i <= dimensions - SIMD_BLOCK_SIZE; i += SIMD_BLOCK_SIZE) {
+                    v128_t vec1 = wasm_f64x2_make(point1[i], point1[i + 1]);
+                    v128_t vec2 = wasm_f64x2_make(point2[i], point2[i + 1]);
+
+                    v128_t diff = wasm_f64x2_sub(vec1, vec2);
+                    v128_t sqr_diff = wasm_f64x2_mul(diff, diff);
+                    sum = wasm_f64x2_add(sum, sqr_diff);
+                }
+
+                // Handle any remaining elements 
+                for (; i < dimensions; ++i) {
+                    printf("remaining\n");
+                    T diff = point2[i] - point1[i];
+                    distance += diff * diff; // Avoid unnecessary SIMD conversion
+                }
+
+                // Extract the sum from the SIMD vector
+                distance += wasm_f64x2_extract_lane(sum, 0) + wasm_f64x2_extract_lane(sum, 1);
+            #else
+                for (std::size_t i = 0; i < dimensions; i++){
+                    distance += pow(point2[i] - point1[i], 2);
+                }
+            #endif
             return distance;
         }
 
