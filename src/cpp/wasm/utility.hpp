@@ -8,6 +8,16 @@ namespace wasm {
     namespace utility {
 
         template <typename T>
+        emscripten::val contiguousVecToArray(T* data, long int dataLength) {
+            emscripten::val arr = emscripten::val::array();
+            size_t i = 0;
+            for (i = 0; i < dataLength; ++i) {
+                arr.call<void>("push", std::move(data[i]));
+            }
+            return arr;
+        }
+
+        template <typename T>
         std::vector<T> arrayToVec(emscripten::val array) {
             if (!array.isArray()) {
                 throw std::runtime_error("Input is not a valid array");
@@ -25,19 +35,35 @@ namespace wasm {
             if (!array.isArray()) {
                 throw std::runtime_error("Input is not a valid array");
             }
+            // Dimensions
             unsigned int arrayLength = array["length"].as<unsigned int>();
-            std::vector<std::vector<T>> result = std::vector<std::vector<T>>(arrayLength);
+            unsigned int columnCount = array[0]["length"].as<unsigned int>(); 
+            bool hasBuffer = array[0].hasOwnProperty("buffer");
+
+            // Pre-allocate result vector
+            std::vector<std::vector<double>> result(arrayLength);
+
+            // Optimize assuming contiguous inner arrays:
             for (unsigned int i = 0; i < arrayLength; ++i) {
                 emscripten::val innerArray = array[i];
 
-                if (!innerArray.isArray()) {
-                    throw std::runtime_error("Inner elements must be arrays");
+                // Get a direct pointer (if possible)
+                T* rowData = nullptr;
+                if (hasBuffer) { 
+                    emscripten::val buffer = innerArray["buffer"]; 
+                    rowData = reinterpret_cast<T*>(buffer.as<uintptr_t>());
                 }
-                std::vector<T> innerVector;
-                for (unsigned int j = 0; j < innerArray["length"].as<unsigned int>(); ++j) {
-                    innerVector.push_back(innerArray[j].as<T>());
+
+                if (rowData) {
+                    // Super-efficient copy from contiguous data
+                    result[i].assign(rowData, rowData + columnCount); 
+                } else {
+                    // Fallback to the original method if no contiguous buffer
+                    result[i].reserve(columnCount);
+                    for (size_t col = 0; col < columnCount; ++col) {
+                        result[i].push_back(innerArray[col].as<T>());
+                    }
                 }
-                result[i] = innerVector;
             }
             return result;
         }
@@ -50,6 +76,7 @@ namespace wasm {
             }
             return arr;
         }
+
 
         template <class T1, class T2>
         emscripten::val mapToObject(const std::map<T1, T2>& cppMap) {

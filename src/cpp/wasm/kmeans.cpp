@@ -1,12 +1,12 @@
 #ifndef WASM_KMEANS_H
 #define WASM_KMEANS_H
 
+#include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include "../kmeans.cpp"
-#include "../distance.cpp"
+#include "../distance.hpp"
 
 #include "utility.hpp"
-
 
 namespace wasm {
 
@@ -18,30 +18,56 @@ namespace wasm {
         };
 
         template <typename T>
+        double ssd(T* point1, T* point2, long int dimensions) {
+            // Sum of Squared Difference (SSD)
+            T distance = 0.0;
+            for (std::size_t i = 0; i < dimensions; i++){
+                distance += pow(point2[i] - point1[i], 2);
+            }
+            return distance;
+        }
+
+        template <typename T>
+        double euclidean(T* point1, T* point2, long int dimensions) {
+            // Euclidean Distance
+            return sqrt(ssd<T>(point1, point2, dimensions));
+        }
+
+        template <typename T>
         class KMeans {
             public:
-                KMeans(const long int k, const long int max_iterations, const double tolerance, const std::string distanceFunc) {
+                KMeans(const long int k, const long int max_iterations, const double tolerance, long int dimensions, const std::string distanceFunc) {
                     if (distanceFunc != "euclidean"){
                         throw std::invalid_argument(distanceFunc + " is not a valid distance metric");
                     }
                     m_distance_func = distanceFunc;
-                    auto m_distance = distance::euclidean<T>;
-                    m_instance = new clustering::KMeans<T>(k, max_iterations, tolerance, m_distance);
+                    m_instance = new clustering::KMeansContiguous<T>(k, max_iterations, tolerance, dimensions, euclidean<T>);
                 }
 
                 KResult predict(emscripten::val jsData) {
-                    std::vector<std::vector<T>> data = wasm::utility::array2DToVec<T>(jsData);
-                    auto results = this->m_instance->predict(data);
+                    // convert TypedArray to a T* pointer
+                    unsigned int jsDataLength= jsData["length"].as<long int>();
+                    emscripten::val buffer = jsData["buffer"]; 
+                    std::vector<T> byte_data = emscripten::convertJSArrayToNumberVector<T>(jsData);
+                    T* data = reinterpret_cast<T*>(&byte_data[0]); 
+
+                    auto results = this->m_instance->predict(data, jsDataLength);
+                    free(data);
 
                     // convert data to Javascript
-                    auto centroids = std::get<0>(results);
-                    emscripten::val jsCentroids = emscripten::val::array();
-                    for (auto & centroid : centroids) {
-                        jsCentroids.call<void>("push", wasm::utility::vecToArray<T>(centroid));
-                    }
+                    long int dimensions = m_instance->getDimensions();
 
-                    auto clusters = std::get<1>(results);
-                    emscripten::val jsClusters = wasm::utility::vecToArray<long int>(clusters);
+                    T* centroids = std::get<0>(results);
+                    emscripten::val jsCentroids = emscripten::val::array();
+                    long int k = m_instance->getK();
+                    for (size_t i = 0; i < k; ++i) {
+                        jsCentroids.call<void>("push", wasm::utility::contiguousVecToArray<T>(&centroids[i * dimensions], dimensions));
+                    }
+                    free(centroids);
+
+                    long int * clusters = std::get<1>(results);
+                    emscripten::val jsClusters = wasm::utility::contiguousVecToArray<long int>(clusters, jsDataLength / dimensions);
+                    free(clusters);
                     return KResult{ jsCentroids, jsClusters};
                 }
 
@@ -74,7 +100,7 @@ namespace wasm {
                 }
 
             private:
-                clustering::KMeans<T> * m_instance;
+                clustering::KMeansContiguous<T> * m_instance;
                 std::string m_distance_func;
         };
 

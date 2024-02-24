@@ -8,7 +8,6 @@
 #include "../fuzzy.cpp"
 
 using namespace emscripten;
-using namespace clustering;
 using namespace density;
 
 
@@ -37,7 +36,7 @@ EMSCRIPTEN_BINDINGS(highp) {
         .field("clusters", &wasm::cluster::KResult::clusters);
 
     class_<wasm::cluster::KMeans<double>>("KMeans")
-        .constructor<int, int, double, std::string>()
+        .constructor<long int, long int, double, long int, std::string>()
         .function("setK", &wasm::cluster::KMeans<double>::setK)
         .function("getK", &wasm::cluster::KMeans<double>::getK)
         .function("setMaxIterations", &wasm::cluster::KMeans<double>::setMaxIterations)
@@ -108,9 +107,6 @@ EMSCRIPTEN_BINDINGS(highp) {
         .function("setMinPoints", &wasm::cluster::fuzzy::BorderDBPack<double, long int>::setMinPoints)
         .function("getMinPoints", &wasm::cluster::fuzzy::BorderDBPack<double, long int>::getMinPoints)
         .function("predict", &wasm::cluster::fuzzy::BorderDBPack<double, long int>::predict);
-
-    function("sad", &distance::sad<double>);
-    function("euclidean", &distance::euclidean<double>);
 }
 
 int main() {
