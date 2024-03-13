@@ -15,9 +15,9 @@
 
 <script src="bin/highp.js"></script>
  <script>
-    var highP = new HIGHP();
+    /*var highP = new HIGHP();
 
-    highP.then(function (v) {
+    highP.then(function (v) {*/
         var dropBoxElement = document.querySelector('.dropbox'),
         fileUploadInput = document.querySelector('#img-upload'),
         imgElement = document.querySelector("#uploaded-image"),
@@ -27,7 +27,6 @@
         fileUploadInput.addEventListener('change', function() {
         if (this.files.length) {
             var file = this.files[0];
-            console.log(file);
             imgElement.src = URL.createObjectURL(file);
             imgElement.onload = () => {
             URL.revokeObjectURL(imgElement.src);
@@ -41,13 +40,11 @@
         submitElement.textContent = "Processing";
         submitElement.disabled = true;
         try{
-            setTimeout(function () {
+            setTimeout(async function () {
             var rawKClusters = kElement.value,
                 kClusters = parseInt(rawKClusters);
-            var dominantRGBColors = extractDominantColors(imgElement, kClusters),
-                dominantColorContainerElement = document.querySelector(
-                ".colors"
-                );
+            var dominantRGBColors = await extractDominantColors(imgElement, kClusters),
+                dominantColorContainerElement = document.querySelector(".colors");
             renderColors(dominantColorContainerElement, dominantRGBColors);
             submitElement.textContent = "Submit";
             submitElement.disabled = false;
@@ -69,24 +66,21 @@
         return imageData;
         }
 
-        function clusterPixels(element, k) {
+        async function clusterPixels(element, k) {
             var imgData = loadData(element),
-                data = new Float32Array(imgData.data.length);
+                data = [];
             for (var i = 0; i < imgData.data.length; i += 4) {
-                var rgbColor = [imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]],
+                var rgbColor = [imgData.data[i], imgData.data[i + 1], imgData.data[i + 2], 1.0],
                 labColor = rgb2lab(rgbColor);
-                data[i] = labColor[0];
-                data[i + 1] = labColor[1];
-                data[i + 2] = labColor[2];
+                data.push(labColor);
             }
-            var dimensions = 4,
-                kmeansClf = new v.KMeans(k, 50, 10, dimensions, "euclidean");
-            var results = kmeansClf.predict(data);
+            var kmeansClf = new KMeans(k, 50, 0.00001, "euclidean");
+            var results = await kmeansClf.predict(data);
             return results;
         }
 
-        function extractDominantColors(element, k) {
-            var clusterData = clusterPixels(element, k),
+        async function extractDominantColors(element, k) {
+            var clusterData = await clusterPixels(element, k),
                 centroids = clusterData.centroids;
             return centroids;
         }
@@ -156,5 +150,5 @@
                 alpha
             ];
         }
-    });
+    //});
 </script>

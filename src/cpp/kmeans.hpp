@@ -231,7 +231,7 @@ namespace clustering {
                     //emscripten_console_log(("Assignment changes: " + std::to_string(assignment_changes)).c_str());
                     centroid_changes = update_centroids(data, length, centroids, clusters);
                 }
-                printf("Current iteration: %zu, centroid changes: %f\n", current_iteration, centroid_changes);
+                //printf("Current iteration: %zu, centroid changes: %f\n", current_iteration, centroid_changes);
                 std::tuple<T *, long int *> output = std::tie(centroids, clusters);
                 return output;
             }
