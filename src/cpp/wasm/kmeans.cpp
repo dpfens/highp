@@ -64,13 +64,17 @@ namespace wasm {
 
         template <typename T>
         class KMeans {
+            static const inline std::unordered_map<std::string, double (* )(T*, T*, long int)> distance_funcs = {
+                { "euclidean", euclidean<T> }
+            };
+
             public:
                 KMeans(const long int k, const long int max_iterations, const double tolerance, long int dimensions, const std::string distanceFunc) {
-                    if (distanceFunc != "euclidean"){
+                    if (distance_funcs.find(distanceFunc) == distance_funcs.end()) {
                         throw std::invalid_argument(distanceFunc + " is not a valid distance metric");
                     }
                     m_distance_func = distanceFunc;
-                    m_instance = new clustering::KMeansContiguous<T>(k, max_iterations, tolerance, dimensions, euclidean<T>);
+                    m_instance = new clustering::KMeansContiguous<T>(k, max_iterations, tolerance, dimensions, distance_funcs.at(distanceFunc));
                 }
 
                 KResult predict(emscripten::val jsData) {
