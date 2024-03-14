@@ -4,7 +4,7 @@ CPP=g++
 CPPFLAGS = -Wall -fopenmp -g -O2 -std=c++11
 WASM=em++
 WASMDEBUGFLAGS = -O2 -gsource-map --profiling --profiling-funcs --tracing -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS
-WASMOPTFLAGS = -Os -sDISABLE_EXCEPTION_CATCHING=1 -flto
+WASMOPTFLAGS = -Os -s ASSERTIONS=0 -sDISABLE_EXCEPTION_CATCHING=1 -flto
 WASMFLAGS = -std=c++17 -lembind -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME="'HIGHP'" -sALLOW_MEMORY_GROWTH --extern-post-js src/js/highp-post.js
 SWIG=./swig/
 SRC=./src/
