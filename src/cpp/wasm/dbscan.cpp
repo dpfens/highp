@@ -16,7 +16,7 @@ namespace wasm {
         template <typename T>
         class DBSCAN {
             public:
-                DBSCAN(const double epsilon, const long int min_points, const std::string distanceFunc) {
+                DBSCAN(const T epsilon, const long int min_points, const std::string distanceFunc) {
                     if (distanceFunc != "euclidean"){
                         throw std::invalid_argument(distanceFunc + " is not a valid distance metric");
                     }
@@ -31,7 +31,7 @@ namespace wasm {
                     return wasm::utility::vecToArray<int>(clusters);
                 }
 
-                void setEpsilon(const double value) {
+                void setEpsilon(const T value) {
                     this->m_instance->setEpsilon(value);
                 }
 
@@ -59,7 +59,7 @@ namespace wasm {
         template <typename T>
         class DBPack {
             public:
-                DBPack(const double epsilon, const long int min_points) {
+                DBPack(const T epsilon, const long int min_points) {
                     m_instance = new density::DBPack<T>(epsilon, min_points);
                 }
 
@@ -69,7 +69,7 @@ namespace wasm {
                     return wasm::utility::vecToArray<int>(clusters);
                 }
 
-                void setEpsilon(const double value) {
+                void setEpsilon(const T value) {
                     this->m_instance->setEpsilon(value);
                 }
 

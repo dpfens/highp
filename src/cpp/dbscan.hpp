@@ -13,9 +13,9 @@ namespace density {
     class DBSCAN {
 
     private:
-        double m_epsilon;
+        T m_epsilon;
         long int m_min_points;
-        double (* m_distance)(std::vector<T>, std::vector<T>);
+        T (* m_distance)(std::vector<T>, std::vector<T>);
 
         void expand_cluster(const std::vector<std::vector<T> > &distance_matrix, const int index, std::vector<int> index_neighbors, std::vector<int> &clusters, int cluster_id) {
             std::vector<int> seed_neighbors = index_neighbors, n_neighbors, visited;
@@ -46,10 +46,10 @@ namespace density {
             }
         }
 
-        std::vector<int> neighbors(const std::vector<std::vector<double> > &distance_matrix, size_t index) {
-            double distance;
+        std::vector<int> neighbors(const std::vector<std::vector<T> > &distance_matrix, size_t index) {
+            T distance;
             std::vector<int> output;
-            std::vector<double> row = distance_matrix.at(index);
+            std::vector<T> row = distance_matrix.at(index);
             for(auto it = row.begin(); it != row.end(); ++it) {
                 int index = std::distance(row.begin(), it);
                 distance = row.at(index);
@@ -60,18 +60,18 @@ namespace density {
             return output;
         }
 
-        virtual std::vector<std::vector<double> > calculate_distances(const std::vector<std::vector<T> > &data) {
+        virtual std::vector<std::vector<T> > calculate_distances(const std::vector<std::vector<T> > &data) {
             size_t data_size = data.size(), i = 0, j = 0;
-            std::vector<std::vector<double> > output(data_size);
+            std::vector<std::vector<T> > output(data_size);
             for(i = 0; i < data_size; ++i) {
-                std::vector<double> row(data_size);
+                std::vector<T> row(data_size);
                 output.at(i) = row;
             }
             #pragma omp parallel for if(data_size > 2000) private(i, j) shared(data)
             for (i = 0; i < data_size; ++i) {
                 std::vector<T> point1 = data.at(i), point2;
                 for(j = i; j < data_size; ++j) {
-                    double dist = m_distance(point1, data.at(j));
+                    T dist = m_distance(point1, data.at(j));
                     #pragma omp critical
                     output[i][j] = dist;
                     #pragma omp critical
@@ -83,7 +83,7 @@ namespace density {
 
     public:
         DBSCAN(){};
-        DBSCAN(const double epsilon, const long int min_points, double (* distance_func)(std::vector<T>, std::vector<T>)) {
+        DBSCAN(const T epsilon, const long int min_points, T (* distance_func)(std::vector<T>, std::vector<T>)) {
             assert(epsilon > 0);
             assert(min_points > 0);
             m_epsilon = epsilon;
@@ -116,7 +116,7 @@ namespace density {
                 *it = -2;
             }
 
-            const std::vector<std::vector<double> > distance_matrix = this->calculate_distances(data);
+            const std::vector<std::vector<T> > distance_matrix = this->calculate_distances(data);
             int cluster_id = 0;
             size_t index;
             for(auto it = data.begin(); it != data.end(); ++it) {
@@ -145,13 +145,13 @@ namespace density {
         // to existing points
 
     private:
-        double m_epsilon;
+        T m_epsilon;
         unsigned long int m_min_points;
 
         std::vector<size_t> neighbors(const std::vector<T> &data, size_t &max_index) {
             size_t sample_count = data.size();
             T current_point = data.at(max_index), neighbor;
-            double distance = 0.0;
+            T distance = 0.0;
             size_t neighbor_index = max_index;
             std::vector<size_t> output;
             output.push_back(max_index);
@@ -194,7 +194,7 @@ namespace density {
         }
 
     public:
-        DBPack(const double epsilon, const unsigned long int min_points) {
+        DBPack(const T epsilon, const unsigned long int min_points) {
             assert(epsilon > 0);
             assert(min_points > 0);
             m_epsilon = epsilon;

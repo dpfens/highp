@@ -15,11 +15,11 @@ namespace clustering {
         private:
             long int m_k;
             long int m_max_iterations;
-            double m_tolerance;
+            T m_tolerance;
             long int m_dimensions;
-            double (* m_distance)(T*, T*, long int);
+            T (* m_distance)(T*, T*, long int);
 
-            void initialize_random_centroids(T* data, long int dataLength, T* centroids) { 
+            void initialize_random_centroids(T* data, size_t dataLength, T* centroids) { 
                 size_t i = 0;
                 size_t dataPoints = dataLength / m_dimensions;
 
@@ -33,11 +33,11 @@ namespace clustering {
                 }
             }
 
-            void initialize_kpp_centroids(T* data, long int dataLength, T *centroids) {
+            void initialize_kpp_centroids(T* data, size_t dataLength, T *centroids) {
                 size_t dataPoints = dataLength / m_dimensions;
                 size_t i = 0;
 
-                double ** centroidIndices = (double **) malloc(sizeof(double *) * m_k);
+                T ** centroidIndices = (T **) malloc(sizeof(T *) * m_k);
                 srand(time(NULL)); 
 
                 //set first seed
@@ -50,7 +50,7 @@ namespace clustering {
                 long int current_centroid = 1;
 
                 while (current_centroid < m_k) {
-                    double maxMinDistance = std::numeric_limits<double>::min();
+                    T maxMinDistance = std::numeric_limits<T>::min();
                     long int maxCentroidIndex = 0;
                     for (size_t j = 0; j < dataPoints; ++j) {
                         // check if already selected as a centroid
@@ -66,9 +66,9 @@ namespace clustering {
                         }
                         /* end Check if already selected */
                         
-                        double currentMinDistance = std::numeric_limits<double>::max();
+                        T currentMinDistance = std::numeric_limits<T>::max();
                         for (long int k = 0; k < current_centroid; ++k) {
-                            double potentialDistance = m_distance(&centroids[k * m_dimensions], &data[j * m_dimensions], m_dimensions);
+                            T potentialDistance = m_distance(&centroids[k * m_dimensions], &data[j * m_dimensions], m_dimensions);
                             if (potentialDistance < currentMinDistance) {
                                 currentMinDistance = potentialDistance;
                             }
@@ -86,7 +86,7 @@ namespace clustering {
                 }
             }
 
-            double update_centroids(T* data, long int dataLength, T* centroids, long int * clusters) {
+            T update_centroids(T* data, size_t dataLength, T* centroids, long int * clusters) {
                 size_t dataPoints = dataLength / m_dimensions;
 
                 long double * sums = (long double *) malloc(sizeof(long double) * m_k * m_dimensions);
@@ -136,9 +136,9 @@ namespace clustering {
                     }
                 }
 
-                double changes = 0.0;
+                T changes = 0.0;
                 for (i = 0; i < m_k; ++i) {
-                    double distance = m_distance(&centroids[i * m_dimensions], &new_centroids[i * m_dimensions], m_dimensions);
+                    T distance = m_distance(&centroids[i * m_dimensions], &new_centroids[i * m_dimensions], m_dimensions);
                     changes += distance;
                     for (size_t j = 0; j < m_dimensions; ++j) {
                         centroids[i * m_dimensions + j] = new_centroids[i * m_dimensions + j];
@@ -147,18 +147,18 @@ namespace clustering {
                 return changes;
             }
 
-            long int update_clusters(T* data, long int dataLength, T* centroids, long int * clusters) {
+            long int update_clusters(T* data, size_t dataLength, T* centroids, long int * clusters) {
                 size_t dataPoints = dataLength / m_dimensions;
                 size_t i = 0;
                 long int assignment_changes = 0;
 
-                double distance = 0.0;
+                T distance = 0.0;
                 long int closest_centroid = 0;
-                double closest_centroid_distance = std::numeric_limits<double>::max();
+                T closest_centroid_distance = std::numeric_limits<T>::max();
                 for (i = 0; i < dataPoints; ++i) {
                     T* sample = &data[i * m_dimensions];
                     closest_centroid = 0;
-                    closest_centroid_distance = std::numeric_limits<double>::max();
+                    closest_centroid_distance = std::numeric_limits<T>::max();
                     for (size_t j = 0; j < m_k; ++j) {
                         T* centroid = &centroids[j * m_dimensions];
                         distance = this->m_distance(sample, centroid, m_dimensions);
@@ -176,7 +176,7 @@ namespace clustering {
             }
 
         public:
-            KMeansContiguous(const long int k, const long int max_iterations, const double tolerance, const long int dimensions, double (* distance_func)(T*, T*, long int)) {
+            KMeansContiguous(const long int k, const long int max_iterations, const T tolerance, const long int dimensions, T (* distance_func)(T*, T*, long int)) {
                 m_k = k;
                 m_max_iterations = max_iterations;
                 m_tolerance = tolerance;
@@ -208,11 +208,11 @@ namespace clustering {
                 return this->m_max_iterations;
             }
 
-            void setTolerance(const double tolerance) {
+            void setTolerance(const T tolerance) {
                 this->m_tolerance = tolerance;
             }
 
-            double getTolerance() {
+            T getTolerance() {
                 return this->m_tolerance;
             }
 
@@ -221,7 +221,7 @@ namespace clustering {
                 long int * clusters = (long int *) malloc(sizeof(long int) * pointCount);
                 T* centroids = (T *) malloc(sizeof(T) * m_dimensions * m_k);
                 long int current_iteration = 0;
-                double centroid_changes = m_tolerance;
+                T centroid_changes = m_tolerance;
                 long int assignment_changes = m_tolerance;
 
                 initialize_kpp_centroids(data, length, centroids);
@@ -243,8 +243,8 @@ namespace clustering {
     private:
         long int m_k;
         long int m_max_iterations;
-        double m_tolerance;
-        double (* m_distance)(std::vector<T>, std::vector<T>);
+        T m_tolerance;
+        T (* m_distance)(std::vector<T>, std::vector<T>);
 
         void initialize_random_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids) {
             size_t sample_count = data.size();
@@ -282,12 +282,12 @@ namespace clustering {
 
             while (current_centroid < m_k) {
 
-                std::vector<double> distances;
+                std::vector<T> distances;
                 for (size_t j = 0; j < sample_count; ++j) {
                     std::vector<T> potential_point = data[j];
-                    double current_min_distance = 99999;
+                    T current_min_distance = 99999;
                     for (long int k = 0; k < current_centroid; ++k) {
-                        double potential_distance = m_distance(centroids[k], potential_point);
+                        T potential_distance = m_distance(centroids[k], potential_point);
                         if (potential_distance < current_min_distance) {
                             current_min_distance = potential_distance;
                         }
@@ -302,7 +302,7 @@ namespace clustering {
             }
         }
 
-        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
+        T update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
             size_t centroid_count = centroids.size();
             size_t sample_count = data.size();
             size_t i = 0;
@@ -338,9 +338,9 @@ namespace clustering {
                 }
             }
 
-            double changes = 0.0;
+            T changes = 0.0;
             for (i = 0; i < centroid_count; ++i) {
-                double distance = m_distance(centroids[i], new_centroids[i]);
+                T distance = m_distance(centroids[i], new_centroids[i]);
                 changes += distance;
                 for (size_t j = 0; j < dimensions; ++j) {
                     centroids[i][j] = new_centroids[i][j];
@@ -357,9 +357,9 @@ namespace clustering {
 
             long int assignment_changes = 0;
 
-            double distance = 0.0;
+            T distance = 0.0;
             long int closest_centroid = 0;
-            double closest_centroid_distance = 9999999;
+            T closest_centroid_distance = 9999999;
             for (i = 0; i < sample_count; ++i) {
                 std::vector<T>& sample = data[i];
                 closest_centroid = 0;
@@ -382,7 +382,7 @@ namespace clustering {
         }
 
     public:
-        KMeans(const long int k, const long int max_iterations, const double tolerance, double (* distance_func)(std::vector<T>, std::vector<T>)) {
+        KMeans(const long int k, const long int max_iterations, const T tolerance, T (* distance_func)(std::vector<T>, std::vector<T>)) {
             m_k = k;
             m_max_iterations = max_iterations;
             m_tolerance = tolerance;
@@ -405,11 +405,11 @@ namespace clustering {
             return this->m_max_iterations;
         }
 
-        void setTolerance(const double tolerance) {
+        void setTolerance(const T tolerance) {
             this->m_tolerance = tolerance;
         }
 
-        double getTolerance() {
+        T getTolerance() {
             return this->m_tolerance;
         }
 
@@ -419,7 +419,7 @@ namespace clustering {
             std::vector<long int> clusters(sample_size);
             std::vector<std::vector<T> > centroids(m_k);
             long int current_iteration = 0;
-            double centroid_changes = m_tolerance;
+            T centroid_changes = m_tolerance;
             long int assignment_changes = m_tolerance;
 
             initialize_random_centroids(data, centroids);
@@ -436,7 +436,7 @@ namespace clustering {
     template <typename T>
     class KMedian: public KMeans<T> {
     public:
-        KMedian(const long int k, const long int max_iterations, const double tolerance, double (* distance_func)(std::vector<T>, std::vector<T>)): KMeans<T>(k, max_iterations, tolerance, distance_func) {
+        KMedian(const long int k, const long int max_iterations, const T tolerance, T (* distance_func)(std::vector<T>, std::vector<T>)): KMeans<T>(k, max_iterations, tolerance, distance_func) {
             m_k = k;
             m_max_iterations = max_iterations;
             m_tolerance = tolerance;
@@ -446,8 +446,8 @@ namespace clustering {
     private:
         long int m_k;
         long int m_max_iterations;
-        double m_tolerance;
-        double (* m_distance)(std::vector<T>, std::vector<T>);
+        T m_tolerance;
+        T (* m_distance)(std::vector<T>, std::vector<T>);
 
         void initialize_random_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids) {
             size_t sample_count = data.size();
@@ -475,7 +475,7 @@ namespace clustering {
             return data[data.size() / 2];
         }
 
-        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<int> &clusters) {
+        T update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<int> &clusters) {
             size_t centroid_count = centroids.size();
             size_t sample_count = data.size();
             size_t dimensions = centroids[0].size();
@@ -502,10 +502,10 @@ namespace clustering {
                 }
             }
 
-            double changes = 0.0;
+            T changes = 0.0;
             #pragma omp parallel for private(i)
             for (i = 0; i < centroid_count; ++i) {
-                double distance = m_distance(centroids[i], new_centroids[i]);
+                T distance = m_distance(centroids[i], new_centroids[i]);
                 #pragma omp critical
                 changes += distance;
             }
@@ -517,16 +517,16 @@ namespace clustering {
     template <typename T>
     class KMode: public KMeans<T> {
     public:
-        KMode(const long int k, const long int max_iterations, const double tolerance, double (* distance_func)(std::vector<T>, std::vector<T>)): KMeans<T>(k, max_iterations, tolerance, distance_func) {
+        KMode(const long int k, const long int max_iterations, const T tolerance, T (* distance_func)(std::vector<T>, std::vector<T>)): KMeans<T>(k, max_iterations, tolerance, distance_func) {
             m_k = k;
             m_max_iterations = max_iterations;
             m_tolerance = tolerance;
             m_distance = distance_func;
         }
 
-        static double dissimilarity_func(std::vector<T> point1, std::vector<T> point2) {
+        static T dissimilarity_func(std::vector<T> point1, std::vector<T> point2) {
             size_t dimensions = point1.size();
-            double output = 0;
+            T output = 0;
             for (size_t i = 0; i < dimensions; ++i) {
                 if(point1[i] != point2[i]) {
                     ++output;
@@ -538,15 +538,15 @@ namespace clustering {
     private:
         long int m_k;
         long int m_max_iterations;
-        double m_tolerance;
-        double (* m_distance)(std::vector<T>, std::vector<T>);
+        T m_tolerance;
+        T (* m_distance)(std::vector<T>, std::vector<T>);
 
-        double update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
+        T update_centroids(std::vector<std::vector<T> > &data, std::vector<std::vector<T> > &centroids, std::vector<long int> &clusters) {
             size_t centroid_count = centroids.size();
             size_t sample_count = data.size();
             size_t dimensions = centroids[0].size();
             size_t i = 0;
-            double changes = 0.0;
+            T changes = 0.0;
 
             std::vector<std::vector<T> > new_centroids(centroid_count);
 

@@ -19,57 +19,68 @@ namespace wasm {
         };
 
         template <typename T>
-        double ssd(T* point1, T* point2, long int dimensions) {
+        T ssd(T* point1, T* point2, long int dimensions) {
             // Sum of Squared Difference (SSD)
             T distance = 0.0;
 
             #ifdef __wasm_simd128__
-                v128_t sum = wasm_f64x2_splat(0.0f);
-
-                // Calculate SSD in blocks for better performance
+            if constexpr (std::is_same_v<T, float>) {
+                v128_t sum = wasm_f32x4_splat(0.0f);
+                const int SIMD_BLOCK_SIZE = 4;
+                long int i = 0;
+                for (; i <= dimensions - SIMD_BLOCK_SIZE; i += SIMD_BLOCK_SIZE) {
+                    v128_t vec1 = wasm_f32x4_make(point1[i], point1[i + 1], point1[i + 2], point1[i + 3]);
+                    v128_t vec2 = wasm_f32x4_make(point2[i], point2[i + 1], point2[i + 2], point2[i + 3]);
+                    v128_t diff = wasm_f32x4_sub(vec1, vec2);
+                    v128_t sqr_diff = wasm_f32x4_mul(diff, diff);
+                    sum = wasm_f32x4_add(sum, sqr_diff);
+                }
+                for (; i < dimensions; ++i) {
+                    T diff = point2[i] - point1[i];
+                    distance += diff * diff;
+                }
+                distance += wasm_f32x4_extract_lane(sum, 0) + wasm_f32x4_extract_lane(sum, 1) +
+                            wasm_f32x4_extract_lane(sum, 2) + wasm_f32x4_extract_lane(sum, 3);
+            } else if constexpr (std::is_same_v<T, double>) {
+                v128_t sum = wasm_f64x2_splat(0.0);
                 const int SIMD_BLOCK_SIZE = 2;
-
                 long int i = 0;
                 for (; i <= dimensions - SIMD_BLOCK_SIZE; i += SIMD_BLOCK_SIZE) {
                     v128_t vec1 = wasm_f64x2_make(point1[i], point1[i + 1]);
                     v128_t vec2 = wasm_f64x2_make(point2[i], point2[i + 1]);
-
                     v128_t diff = wasm_f64x2_sub(vec1, vec2);
                     v128_t sqr_diff = wasm_f64x2_mul(diff, diff);
                     sum = wasm_f64x2_add(sum, sqr_diff);
                 }
-
-                // Handle any remaining elements 
                 for (; i < dimensions; ++i) {
-                    printf("remaining\n");
                     T diff = point2[i] - point1[i];
-                    distance += diff * diff; // Avoid unnecessary SIMD conversion
+                    distance += diff * diff;
                 }
-
-                // Extract the sum from the SIMD vector
                 distance += wasm_f64x2_extract_lane(sum, 0) + wasm_f64x2_extract_lane(sum, 1);
+            }
             #else
-                for (std::size_t i = 0; i < dimensions; i++){
-                    distance += pow(point2[i] - point1[i], 2);
-                }
+            for (std::size_t i = 0; i < dimensions; i++) {
+                distance += pow(point2[i] - point1[i], 2);
+            }
             #endif
+
             return distance;
         }
 
         template <typename T>
-        double euclidean(T* point1, T* point2, long int dimensions) {
+        T euclidean(T* point1, T* point2, long int dimensions) {
             // Euclidean Distance
             return sqrt(ssd<T>(point1, point2, dimensions));
         }
 
         template <typename T>
         class KMeans {
-            static const inline std::unordered_map<std::string, double (* )(T*, T*, long int)> distance_funcs = {
+            static const inline std::unordered_map<std::string, T (* )(T*, T*, long int)> distance_funcs = {
                 { "euclidean", euclidean<T> }
             };
 
             public:
-                KMeans(const long int k, const long int max_iterations, const double tolerance, long int dimensions, const std::string distanceFunc) {
+                KMeans(const long int k, const long int max_iterations, const T tolerance, long int dimensions, const std::string distanceFunc) {
                     if (distance_funcs.find(distanceFunc) == distance_funcs.end()) {
                         throw std::invalid_argument(distanceFunc + " is not a valid distance metric");
                     }
@@ -120,11 +131,11 @@ namespace wasm {
                     return this->m_instance->getMaxIterations();
                 }
 
-                void setTolerance(const double tolerance) {
+                void setTolerance(const T tolerance) {
                     this->m_instance->setTolerance(tolerance);
                 }
 
-                double getTolerance() {
+                T getTolerance() {
                     return this->m_instance->getTolerance();
                 }
 
@@ -139,8 +150,12 @@ namespace wasm {
 
         template <typename T>
         class KMedian {
+            static const inline std::unordered_map<std::string, T (* )(T*, T*, long int)> distance_funcs = {
+                { "euclidean", euclidean<T> }
+            };
+
             public:
-                KMedian(const long int k, const long int max_iterations, const double tolerance, const std::string distanceFunc) {
+                KMedian(const long int k, const long int max_iterations, const T tolerance, const std::string distanceFunc) {
                     if (distanceFunc != "euclidean"){
                         throw std::invalid_argument(distanceFunc + " is not a valid distance metric");
                     }
@@ -181,11 +196,11 @@ namespace wasm {
                     return this->m_instance->getMaxIterations();
                 }
 
-                void setTolerance(const double tolerance) {
+                void setTolerance(const T tolerance) {
                     this->m_instance->setTolerance(tolerance);
                 }
 
-                double getTolerance() {
+                T getTolerance() {
                     return this->m_instance->getTolerance();
                 }
 
@@ -200,8 +215,12 @@ namespace wasm {
         
         template <typename T>
         class KMode {
+            static const inline std::unordered_map<std::string, T (* )(T*, T*, long int)> distance_funcs = {
+                { "euclidean", euclidean<T> }
+            };
+
             public:
-                KMode(const long int k, const long int max_iterations, const double tolerance, const std::string distanceFunc) {
+                KMode(const long int k, const long int max_iterations, const T tolerance, const std::string distanceFunc) {
                     if (distanceFunc != "euclidean"){
                         throw std::invalid_argument(distanceFunc + " is not a valid distance metric");
                     }
@@ -242,11 +261,11 @@ namespace wasm {
                     return this->m_instance->getMaxIterations();
                 }
 
-                void setTolerance(const double tolerance) {
+                void setTolerance(const T tolerance) {
                     this->m_instance->setTolerance(tolerance);
                 }
 
-                double getTolerance() {
+                T getTolerance() {
                     return this->m_instance->getTolerance();
                 }
 
