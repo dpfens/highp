@@ -19,7 +19,7 @@ namespace wasm {
         };
 
         template <typename T>
-        T ssd(T* point1, T* point2, long int dimensions) {
+        T ssd(const T* point1, const T* point2, long int dimensions) {
             // Sum of Squared Difference (SSD)
             T distance = 0.0;
 
@@ -68,15 +68,19 @@ namespace wasm {
         }
 
         template <typename T>
-        T euclidean(T* point1, T* point2, long int dimensions) {
+        T euclidean(const T* point1, const T* point2, long int dimensions) {
             // Euclidean Distance
             return sqrt(ssd<T>(point1, point2, dimensions));
         }
 
+        /**
+         * WASM wrapper interface for KMeans Contiguous
+         */
         template <typename T>
         class KMeans {
-            static const inline std::unordered_map<std::string, T (* )(T*, T*, long int)> distance_funcs = {
-                { "euclidean", euclidean<T> }
+            static const inline std::unordered_map<std::string, T (* )(const T*, const T*, long int)> distance_funcs = {
+                { "euclidean", euclidean<T> },
+                { "ssd", ssd<T> }
             };
 
             public:
@@ -87,18 +91,19 @@ namespace wasm {
                     m_distance_func = distanceFunc;
                     m_instance = new clustering::KMeansContiguous<T>(k, max_iterations, tolerance, dimensions, distance_funcs.at(distanceFunc));
                 }
+                
+                ~KMeans() {
+                    delete m_instance;
+                }
 
                 KResult predict(emscripten::val jsData) {
-                    // convert TypedArray to a T* pointer
-                    unsigned int jsDataLength= jsData["length"].as<long int>();
-                    emscripten::val buffer = jsData["buffer"]; 
+                    unsigned int jsDataLength = jsData["length"].as<long int>();
                     std::vector<T> byte_data = emscripten::convertJSArrayToNumberVector<T>(jsData);
-                    T* data = reinterpret_cast<T*>(&byte_data[0]); 
+                    T* data = byte_data.data();
 
                     auto results = this->m_instance->predict(data, jsDataLength);
-                    free(data);
 
-                    // convert data to Javascript
+                    // Convert data to Javascript
                     long int dimensions = m_instance->getDimensions();
 
                     T* centroids = std::get<0>(results);

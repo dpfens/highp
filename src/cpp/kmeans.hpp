@@ -17,7 +17,30 @@ namespace clustering {
             long int m_max_iterations;
             T m_tolerance;
             long int m_dimensions;
-            T (* m_distance)(T*, T*, long int);
+            T (* m_distance)(const T*, const T*, long int);
+            
+            long double * m_sums;
+            size_t * m_counts;
+            T * m_new_centroids;
+            bool m_buffers_allocated;
+
+            void allocate_buffers() {
+                if (!m_buffers_allocated) {
+                    m_sums = (long double *) malloc(sizeof(long double) * m_k * m_dimensions);
+                    m_counts = (size_t *) malloc(sizeof(size_t) * m_k);
+                    m_new_centroids = (T *) malloc(sizeof(T) * m_k * m_dimensions);
+                    m_buffers_allocated = true;
+                }
+            }
+
+            void deallocate_buffers() {
+                if (m_buffers_allocated) {
+                    free(m_sums);
+                    free(m_counts);
+                    free(m_new_centroids);
+                    m_buffers_allocated = false;
+                }
+            }
 
             void initialize_random_centroids(T* data, size_t dataLength, T* centroids) { 
                 size_t i = 0;
@@ -43,7 +66,7 @@ namespace clustering {
                 //set first seed
                 size_t random_seed = rand() % (dataPoints + 1);
                 centroidIndices[0] = &data[random_seed * m_dimensions];
-                #pragma omp parallel for private(i) shared(centroids, data)
+                
                 for (i = 0; i < m_dimensions; ++i) {
                     centroids[i] = data[random_seed * m_dimensions + i];
                 }
@@ -84,64 +107,56 @@ namespace clustering {
                     centroidIndices[current_centroid] = &data[maxCentroidIndex * m_dimensions];
                     ++current_centroid;
                 }
+                free(centroidIndices);
             }
 
             T update_centroids(T* data, size_t dataLength, T* centroids, long int * clusters) {
                 size_t dataPoints = dataLength / m_dimensions;
 
-                long double * sums = (long double *) malloc(sizeof(long double) * m_k * m_dimensions);
-                size_t * counts = (size_t *) malloc(sizeof(size_t) * m_k * m_dimensions);
-                T * new_centroids = (T *) malloc(sizeof(T) * m_k * m_dimensions);
+                allocate_buffers();
 
-                size_t i = 0;
                 for (size_t cluster = 0; cluster < m_k; ++cluster) {
+                    m_counts[cluster] = 0;
                     for (size_t dimension = 0; dimension < m_dimensions; ++dimension) {
-                        sums[cluster * m_dimensions + dimension] = 0.0;
+                        m_sums[cluster * m_dimensions + dimension] = 0.0;
                     }
                 }
 
-                #pragma omp parallel for private(i) shared(data, centroids)
-                for (i = 0; i < m_dimensions; ++i) {
-                    for (size_t j = 0; j < dataPoints; ++j) {
-                        ++counts[clusters[j] * m_dimensions + i];
-                        sums[clusters[j] * m_dimensions + i] += data[j * m_dimensions + i];
-                    }
-                }
-
-                // find euclidean mean of points assigned to each centroid
-                // to determine the  new centroid location
-                #pragma omp parallel for private(i) shared(centroids)
-                for (i = 0; i < m_k; ++i) {
-                    // check if has any assignments
-                    bool hasAssignments = false;
+                for (size_t i = 0; i < dataPoints; ++i) {
+                    const long int cluster = clusters[i];
+                    m_counts[cluster]++;
+                    
+                    const size_t data_offset = i * m_dimensions;
+                    const size_t sum_offset = cluster * m_dimensions;
                     for (size_t j = 0; j < m_dimensions; ++j) {
-                        if (counts[i * m_dimensions + j]) {
-                            hasAssignments = true;
-                            break;
-                        }
+                        m_sums[sum_offset + j] += data[data_offset + j];
                     }
-                    // if centroid has assignments, move centroid to  euclidean mean of points assigned to it
-                    if (hasAssignments) {
+                }
+
+                for (size_t i = 0; i < m_k; ++i) {
+                    if (m_counts[i] > 0) {
+                        const T count_inv = 1.0 / (T)m_counts[i];
+                        const size_t centroid_offset = i * m_dimensions;
                         for (size_t j = 0; j < m_dimensions; ++j) {
-                            long double sum = sums[i * m_dimensions + j];
-                            size_t count = counts[i * m_dimensions + j];
-                            //printf("Sum: %Lf, Count: %f\n", sum, T(count));
-                            new_centroids[i * m_dimensions + j] = sum / (T)count;
+                            m_new_centroids[centroid_offset + j] = (T)(m_sums[centroid_offset + j] * count_inv);
                         }
-                    } else { // if no assignments, assign centroid to a random point
+                    } else {
                         size_t random_seed = rand() % (dataPoints + 1);
+                        const size_t centroid_offset = i * m_dimensions;
+                        const size_t data_offset = random_seed * m_dimensions;
                         for (size_t j = 0; j < m_dimensions; ++j) {
-                            new_centroids[i * m_dimensions + j] = data[random_seed * m_dimensions + j];
+                            m_new_centroids[centroid_offset + j] = data[data_offset + j];
                         }
                     }
                 }
 
                 T changes = 0.0;
-                for (i = 0; i < m_k; ++i) {
-                    T distance = m_distance(&centroids[i * m_dimensions], &new_centroids[i * m_dimensions], m_dimensions);
+                for (size_t i = 0; i < m_k; ++i) {
+                    const size_t centroid_offset = i * m_dimensions;
+                    T distance = m_distance(&centroids[centroid_offset], &m_new_centroids[centroid_offset], m_dimensions);
                     changes += distance;
                     for (size_t j = 0; j < m_dimensions; ++j) {
-                        centroids[i * m_dimensions + j] = new_centroids[i * m_dimensions + j];
+                        centroids[centroid_offset + j] = m_new_centroids[centroid_offset + j];
                     }
                 }
                 return changes;
@@ -149,19 +164,16 @@ namespace clustering {
 
             long int update_clusters(T* data, size_t dataLength, T* centroids, long int * clusters) {
                 size_t dataPoints = dataLength / m_dimensions;
-                size_t i = 0;
                 long int assignment_changes = 0;
 
-                T distance = 0.0;
-                long int closest_centroid = 0;
-                T closest_centroid_distance = std::numeric_limits<T>::max();
-                for (i = 0; i < dataPoints; ++i) {
-                    T* sample = &data[i * m_dimensions];
-                    closest_centroid = 0;
-                    closest_centroid_distance = std::numeric_limits<T>::max();
+                for (size_t i = 0; i < dataPoints; ++i) {
+                    const T* sample = &data[i * m_dimensions];
+                    long int closest_centroid = 0;
+                    T closest_centroid_distance = std::numeric_limits<T>::max();
+
                     for (size_t j = 0; j < m_k; ++j) {
-                        T* centroid = &centroids[j * m_dimensions];
-                        distance = this->m_distance(sample, centroid, m_dimensions);
+                        const T* centroid = &centroids[j * m_dimensions];
+                        const T distance = this->m_distance(sample, centroid, m_dimensions);
                         if (distance < closest_centroid_distance) {
                             closest_centroid_distance = distance;
                             closest_centroid = j;
@@ -176,16 +188,27 @@ namespace clustering {
             }
 
         public:
-            KMeansContiguous(const long int k, const long int max_iterations, const T tolerance, const long int dimensions, T (* distance_func)(T*, T*, long int)) {
+            KMeansContiguous(const long int k, const long int max_iterations, const T tolerance, const long int dimensions, T (* distance_func)(const T*, const T*, long int)) {
                 m_k = k;
                 m_max_iterations = max_iterations;
                 m_tolerance = tolerance;
                 m_dimensions = dimensions;
                 m_distance = distance_func;
+                m_buffers_allocated = false;
+                m_sums = nullptr;
+                m_counts = nullptr;
+                m_new_centroids = nullptr;
+            }
+
+            ~KMeansContiguous() {
+                deallocate_buffers();
             }
 
             void setK(const long int k) {
-                this->m_k = k;
+                if (k != m_k) {
+                    deallocate_buffers();
+                    m_k = k;
+                }
             }
 
             long int getK() {
@@ -193,7 +216,10 @@ namespace clustering {
             }
 
             void setDimensions(const long int dimensions) {
-                this->m_dimensions = dimensions;
+                if (dimensions != m_dimensions) {
+                    deallocate_buffers();
+                    m_dimensions = dimensions;
+                }
             }
 
             long int getDimensions() {
@@ -222,16 +248,21 @@ namespace clustering {
                 T* centroids = (T *) malloc(sizeof(T) * m_dimensions * m_k);
                 long int current_iteration = 0;
                 T centroid_changes = m_tolerance;
-                long int assignment_changes = m_tolerance;
+                long int assignment_changes = 1; // Initialize to non-zero to enter loop
 
                 initialize_kpp_centroids(data, length, centroids);
-                while (current_iteration < m_max_iterations && centroid_changes >= m_tolerance) {
+
+                while (current_iteration < m_max_iterations && 
+                       centroid_changes >= m_tolerance && 
+                       assignment_changes > 0) {
                     ++current_iteration;
                     assignment_changes = update_clusters(data, length, centroids, clusters);
-                    //emscripten_console_log(("Assignment changes: " + std::to_string(assignment_changes)).c_str());
+
+                    if (assignment_changes == 0) {
+                        break;
+                    }
                     centroid_changes = update_centroids(data, length, centroids, clusters);
                 }
-                //printf("Current iteration: %zu, centroid changes: %f\n", current_iteration, centroid_changes);
                 std::tuple<T *, long int *> output = std::tie(centroids, clusters);
                 return output;
             }
