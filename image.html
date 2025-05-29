@@ -74,8 +74,11 @@
                 labColor = rgb2lab(rgbColor);
                 data.push(labColor);
             }
-            var kmeansClf = new KMeans(k, 50, 0.00001, "euclidean");
-            var results = await kmeansClf.predict(data);
+            var kmeansClf = new KMeans(k, 50, 0.00001, "euclidean"),
+                start = new Date(),
+                results = await kmeansClf.predict(data),
+                end = new Date();
+            console.log('Duration: ' + (end - start));
             return results;
         }
 

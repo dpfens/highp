@@ -9,8 +9,19 @@ class KMeans {
 
     async predict(data) {
         var dimensions = data[0].length,
-            transformedData = this.constructor.flatten(data),
-            module = await new HIGHP();
+            transformedData = this.constructor.flatten(data);
+        
+            if (window.crossOriginIsolated) {
+                // Create a SharedArrayBuffer to hold the imageData
+                sharedBuffer = new SharedArrayBuffer(transformedData.length),
+                sharedData = new Float32Array(sharedBuffer);
+
+                // Copy the imageData to the SharedArrayBuffer
+                sharedData.set(transformedData.data);
+                transformedData = sharedData;
+            }
+
+        var module = await new HIGHP();
         var clf = new module.KMeans(this.k, this.iterations, this.tolerance, dimensions, this.distance);
         return clf.predict(transformedData);
     }
