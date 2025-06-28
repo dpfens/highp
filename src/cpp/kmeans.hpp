@@ -10,16 +10,16 @@
 
 namespace clustering {
 
-    template <typename T>
+    template <typename T, typename DistanceFunc>
     class KMeansContiguous {
         private:
             long int m_k;
             long int m_max_iterations;
             T m_tolerance;
             long int m_dimensions;
-            T (* m_distance)(const T*, const T*, long int);
             
             long double * m_sums;
+            T * m_reciprocals;
             size_t * m_counts;
             T * m_new_centroids;
             bool m_buffers_allocated;
@@ -27,6 +27,7 @@ namespace clustering {
             void allocate_buffers() {
                 if (!m_buffers_allocated) {
                     m_sums = (long double *) malloc(sizeof(long double) * m_k * m_dimensions);
+                    m_reciprocals = (T *) malloc(sizeof(T) * m_k);
                     m_counts = (size_t *) malloc(sizeof(size_t) * m_k);
                     m_new_centroids = (T *) malloc(sizeof(T) * m_k * m_dimensions);
                     m_buffers_allocated = true;
@@ -36,6 +37,7 @@ namespace clustering {
             void deallocate_buffers() {
                 if (m_buffers_allocated) {
                     free(m_sums);
+                    free(m_reciprocals);
                     free(m_counts);
                     free(m_new_centroids);
                     m_buffers_allocated = false;
@@ -58,56 +60,58 @@ namespace clustering {
 
             void initialize_kpp_centroids(T* data, size_t dataLength, T *centroids) {
                 size_t dataPoints = dataLength / m_dimensions;
-                size_t i = 0;
-
-                T ** centroidIndices = (T **) malloc(sizeof(T *) * m_k);
+                T * distances = (T *) malloc(sizeof(T) * dataPoints);
+                
                 srand(time(NULL)); 
 
-                //set first seed
-                size_t random_seed = rand() % (dataPoints + 1);
-                centroidIndices[0] = &data[random_seed * m_dimensions];
-                
-                for (i = 0; i < m_dimensions; ++i) {
+                // Choose first centroid randomly
+                size_t random_seed = rand() % dataPoints;  // Fixed: removed +1
+                for (size_t i = 0; i < m_dimensions; ++i) {
                     centroids[i] = data[random_seed * m_dimensions + i];
                 }
-                long int current_centroid = 1;
 
-                while (current_centroid < m_k) {
-                    T maxMinDistance = std::numeric_limits<T>::min();
-                    long int maxCentroidIndex = 0;
-                    for (size_t j = 0; j < dataPoints; ++j) {
-                        // check if already selected as a centroid
-                        bool isSelected = false;
-                        for (size_t k = 0; k < current_centroid; ++k) {
-                            if (&data[j * m_dimensions] == centroidIndices[k]) {
-                                isSelected = true;
-                                break;
-                            }
-                        }
-                        if (isSelected) {
-                            continue;
-                        }
-                        /* end Check if already selected */
+                // Choose remaining centroids
+                for (size_t c = 1; c < m_k; ++c) {
+                    T total_distance = 0.0;
+                    
+                    // Calculate squared distances to nearest centroid for each point
+                    for (size_t i = 0; i < dataPoints; ++i) {
+                        T min_dist_sq = std::numeric_limits<T>::max();
                         
-                        T currentMinDistance = std::numeric_limits<T>::max();
-                        for (long int k = 0; k < current_centroid; ++k) {
-                            T potentialDistance = m_distance(&centroids[k * m_dimensions], &data[j * m_dimensions], m_dimensions);
-                            if (potentialDistance < currentMinDistance) {
-                                currentMinDistance = potentialDistance;
+                        // Find distance to nearest existing centroid
+                        for (size_t j = 0; j < c; ++j) {
+                            T dist = DistanceFunc::compute(&data[i * m_dimensions], 
+                                                        &centroids[j * m_dimensions], 
+                                                        m_dimensions);
+                            T dist_sq = dist * dist;  // Square the distance
+                            if (dist_sq < min_dist_sq) {
+                                min_dist_sq = dist_sq;
                             }
                         }
-
-                        if (currentMinDistance > maxMinDistance) {
-                            maxMinDistance = currentMinDistance;
-                            maxCentroidIndex = j;
+                        
+                        distances[i] = min_dist_sq;
+                        total_distance += min_dist_sq;
+                    }
+                    
+                    // Choose next centroid with probability proportional to squared distance
+                    T random_val = ((T)rand() / RAND_MAX) * total_distance;
+                    T cumulative = 0.0;
+                    size_t chosen_idx = 0;
+                    
+                    for (size_t i = 0; i < dataPoints; ++i) {
+                        cumulative += distances[i];
+                        if (cumulative >= random_val) {
+                            chosen_idx = i;
+                            break;
                         }
                     }
-
-                    centroids[current_centroid * m_dimensions] = data[maxCentroidIndex * m_dimensions];
-                    centroidIndices[current_centroid] = &data[maxCentroidIndex * m_dimensions];
-                    ++current_centroid;
+                    
+                    // Set the new centroid
+                    for (size_t d = 0; d < m_dimensions; ++d) {
+                        centroids[c * m_dimensions + d] = data[chosen_idx * m_dimensions + d];
+                    }
                 }
-                free(centroidIndices);
+                free(distances);
             }
 
             T update_centroids(T* data, size_t dataLength, T* centroids, long int * clusters) {
@@ -135,7 +139,15 @@ namespace clustering {
 
                 for (size_t i = 0; i < m_k; ++i) {
                     if (m_counts[i] > 0) {
-                        const T count_inv = 1.0 / (T)m_counts[i];
+                        m_reciprocals[i] = 1.0 / (T)m_counts[i];
+                    } else {
+                        m_reciprocals[i] = 0.0;  // Mark empty clusters
+                    }
+                }
+
+                for (size_t i = 0; i < m_k; ++i) {
+                    if (m_counts[i] > 0) {
+                        const T count_inv = m_reciprocals[i];
                         const size_t centroid_offset = i * m_dimensions;
                         for (size_t j = 0; j < m_dimensions; ++j) {
                             m_new_centroids[centroid_offset + j] = (T)(m_sums[centroid_offset + j] * count_inv);
@@ -153,7 +165,7 @@ namespace clustering {
                 T changes = 0.0;
                 for (size_t i = 0; i < m_k; ++i) {
                     const size_t centroid_offset = i * m_dimensions;
-                    T distance = m_distance(&centroids[centroid_offset], &m_new_centroids[centroid_offset], m_dimensions);
+                    T distance = DistanceFunc::compute(&centroids[centroid_offset], &m_new_centroids[centroid_offset], m_dimensions);
                     changes += distance;
                     for (size_t j = 0; j < m_dimensions; ++j) {
                         centroids[centroid_offset + j] = m_new_centroids[centroid_offset + j];
@@ -173,7 +185,7 @@ namespace clustering {
 
                     for (size_t j = 0; j < m_k; ++j) {
                         const T* centroid = &centroids[j * m_dimensions];
-                        const T distance = this->m_distance(sample, centroid, m_dimensions);
+                        const T distance = DistanceFunc::compute(sample, centroid, m_dimensions);
                         if (distance < closest_centroid_distance) {
                             closest_centroid_distance = distance;
                             closest_centroid = j;
@@ -188,12 +200,11 @@ namespace clustering {
             }
 
         public:
-            KMeansContiguous(const long int k, const long int max_iterations, const T tolerance, const long int dimensions, T (* distance_func)(const T*, const T*, long int)) {
+            KMeansContiguous(const long int k, const long int max_iterations, const T tolerance, const long int dimensions) {
                 m_k = k;
                 m_max_iterations = max_iterations;
                 m_tolerance = tolerance;
                 m_dimensions = dimensions;
-                m_distance = distance_func;
                 m_buffers_allocated = false;
                 m_sums = nullptr;
                 m_counts = nullptr;
@@ -267,7 +278,6 @@ namespace clustering {
                 return output;
             }
     };
-
 
     template <typename T>
     class KMeans {

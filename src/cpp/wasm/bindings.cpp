@@ -35,16 +35,15 @@ EMSCRIPTEN_BINDINGS(highp) {
         .field("centroids", &wasm::cluster::KResult::centroids)
         .field("clusters", &wasm::cluster::KResult::clusters);
 
-    class_<wasm::cluster::KMeans<double>>("KMeans")
-        .constructor<long int, long int, double, long int, std::string>()
-        .function("setK", &wasm::cluster::KMeans<double>::setK)
-        .function("getK", &wasm::cluster::KMeans<double>::getK)
-        .function("setMaxIterations", &wasm::cluster::KMeans<double>::setMaxIterations)
-        .function("getMaxIterations", &wasm::cluster::KMeans<double>::getMaxIterations)
-        .function("setTolerance", &wasm::cluster::KMeans<double>::setTolerance)
-        .function("getTolerance", &wasm::cluster::KMeans<double>::getTolerance)
-        .function("getDistance", &wasm::cluster::KMeans<double>::getDistanceFunc)
-        .function("predict", &wasm::cluster::KMeans<double>::predict);
+    class_<wasm::cluster::KMeans<double, wasm::cluster::SSDDistance<double>>>("KMeans")
+        .constructor<long int, long int, double, long int>()
+        .function("setK", &wasm::cluster::KMeans<double, wasm::cluster::SSDDistance<double>>::setK)
+        .function("getK", &wasm::cluster::KMeans<double, wasm::cluster::SSDDistance<double>>::getK)
+        .function("setMaxIterations", &wasm::cluster::KMeans<double, wasm::cluster::SSDDistance<double>>::setMaxIterations)
+        .function("getMaxIterations", &wasm::cluster::KMeans<double, wasm::cluster::SSDDistance<double>>::getMaxIterations)
+        .function("setTolerance", &wasm::cluster::KMeans<double, wasm::cluster::SSDDistance<double>>::setTolerance)
+        .function("getTowasm::clusterlerance", &wasm::cluster::KMeans<double, wasm::cluster::SSDDistance<double>>::getTolerance)
+        .function("predict", &wasm::cluster::KMeans<double, wasm::cluster::SSDDistance<double>>::predict, emscripten::allow_raw_pointers());;
     
     class_<wasm::cluster::KMedian<double>>("KMedian")
         .constructor<int, int, double, std::string>()

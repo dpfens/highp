@@ -18,6 +18,13 @@ namespace wasm {
             emscripten::val clusters;
         };
 
+        struct KMeansDirectResult {
+            double* centroids;
+            long int* clusters;
+            long int centroidsLength;
+            long int clustersLength;
+        };
+
         template <typename T>
         T ssd(const T* point1, const T* point2, long int dimensions) {
             // Sum of Squared Difference (SSD)
@@ -60,7 +67,8 @@ namespace wasm {
             }
             #else
             for (std::size_t i = 0; i < dimensions; i++) {
-                distance += pow(point2[i] - point1[i], 2);
+                T diff = point2[i] - point1[i];
+                distance += (diff * diff);
             }
             #endif
 
@@ -73,51 +81,42 @@ namespace wasm {
             return sqrt(ssd<T>(point1, point2, dimensions));
         }
 
+
+        // Distance functions as template parameters
+        template<typename T>
+        struct EuclideanDistance {
+            static T compute(const T* a, const T* b, long int dims) {
+                return euclidean<T>(a, b, dims);
+            }
+        };
+
+        template<typename T>
+        struct SSDDistance {
+            static T compute(const T* a, const T* b, long int dims) {
+                return ssd<T>(a, b, dims);
+            }
+        };
+
         /**
          * WASM wrapper interface for KMeans Contiguous
          */
-        template <typename T>
+        template <typename T, typename DistanceFunc>
         class KMeans {
-            static const inline std::unordered_map<std::string, T (* )(const T*, const T*, long int)> distance_funcs = {
-                { "euclidean", euclidean<T> },
-                { "ssd", ssd<T> }
-            };
 
             public:
-                KMeans(const long int k, const long int max_iterations, const T tolerance, long int dimensions, const std::string distanceFunc) {
-                    if (distance_funcs.find(distanceFunc) == distance_funcs.end()) {
-                        throw std::invalid_argument(distanceFunc + " is not a valid distance metric");
-                    }
-                    m_distance_func = distanceFunc;
-                    m_instance = new clustering::KMeansContiguous<T>(k, max_iterations, tolerance, dimensions, distance_funcs.at(distanceFunc));
+                KMeans(const long int k, const long int max_iterations, const T tolerance, long int dimensions) {
+                    m_instance = new clustering::KMeansContiguous<T, DistanceFunc>(k, max_iterations, tolerance, dimensions);
                 }
                 
                 ~KMeans() {
                     delete m_instance;
                 }
 
-                KResult predict(emscripten::val jsData) {
-                    unsigned int jsDataLength = jsData["length"].as<long int>();
-                    std::vector<T> byte_data = emscripten::convertJSArrayToNumberVector<T>(jsData);
-                    T* data = byte_data.data();
-
-                    auto results = this->m_instance->predict(data, jsDataLength);
-
-                    // Convert data to Javascript
-                    long int dimensions = m_instance->getDimensions();
-
-                    T* centroids = std::get<0>(results);
-                    emscripten::val jsCentroids = emscripten::val::array();
-                    long int k = m_instance->getK();
-                    for (size_t i = 0; i < k; ++i) {
-                        jsCentroids.call<void>("push", wasm::utility::contiguousVecToArray<T>(&centroids[i * dimensions], dimensions));
-                    }
-                    free(centroids);
-
-                    long int * clusters = std::get<1>(results);
-                    emscripten::val jsClusters = wasm::utility::contiguousVecToArray<long int>(clusters, jsDataLength / dimensions);
-                    free(clusters);
-                    return KResult{ jsCentroids, jsClusters};
+                KResult predict(uintptr_t dataPtr, long int dataLength) {
+                    // Cast the pointer to the appropriate type
+                    T* data = reinterpret_cast<T*>(dataPtr);
+                    
+                    return predictInternal(data, dataLength);
                 }
 
                 void setK(const long int k) {
@@ -144,13 +143,29 @@ namespace wasm {
                     return this->m_instance->getTolerance();
                 }
 
-                std::string getDistanceFunc() {
-                    return this->m_distance_func;
-                }
-
             private:
-                clustering::KMeansContiguous<T> * m_instance;
-                std::string m_distance_func;
+                clustering::KMeansContiguous<T, DistanceFunc> * m_instance;
+
+                KResult predictInternal(T* data, long int dataLength) {
+                    auto results = this->m_instance->predict(data, dataLength);
+
+                    // Convert data to Javascript
+                    long int dimensions = m_instance->getDimensions();
+
+                    T* centroids = std::get<0>(results);
+                    emscripten::val jsCentroids = emscripten::val::array();
+                    long int k = m_instance->getK();
+                    for (size_t i = 0; i < k; ++i) {
+                        jsCentroids.call<void>("push", wasm::utility::contiguousVecToArray<T>(&centroids[i * dimensions], dimensions));
+                    }
+                    free(centroids);
+
+                    long int* clusters = std::get<1>(results);
+                    emscripten::val jsClusters = wasm::utility::contiguousVecToArray<long int>(clusters, dataLength / dimensions);
+                    free(clusters);
+                    
+                    return KResult{jsCentroids, jsClusters};
+                }
         };
 
         template <typename T>

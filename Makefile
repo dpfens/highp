@@ -3,9 +3,9 @@ CCFLAGS = -Wall -fopenmp -g -O2
 CPP=g++
 CPPFLAGS = -Wall -fopenmp -g -O2 -std=c++11
 WASM=em++
-WASMDEBUGFLAGS = -O2 -gsource-map --profiling --profiling-funcs --tracing -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS
+WASMDEBUGFLAGS = -O2 -gsource-map --profiling --profiling-funcs --tracing -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]'
 WASMOPTFLAGS = -Os -s ASSERTIONS=0 -sDISABLE_EXCEPTION_CATCHING=1 -flto
-WASMFLAGS = -std=c++17 -lembind -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME="'HIGHP'" -sALLOW_MEMORY_GROWTH --extern-post-js src/js/highp-post.js
+WASMFLAGS = -std=c++17 -lembind -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME="'HIGHP'" -sALLOW_MEMORY_GROWTH -s EXPORTED_FUNCTIONS='["_malloc", "_free"]' -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' --extern-post-js src/js/highp-post.js
 SWIG=./swig/
 SRC=./src/
 SRC_C=$(SRC)c/
